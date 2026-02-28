@@ -18,6 +18,9 @@ import { ModeToggle } from './ui/mode-toggle'
 import { SPRITE_REGISTRY } from './assets/sprites'
 import { MistralClient } from './ai/mistral-client'
 import { ToolExecutor } from './ai/tool-executor'
+import { TraceCapture } from './telemetry/trace-capture'
+import { TelemetrySession } from './telemetry/session'
+import { showTraceToast } from './ui/trace-toast'
 
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
 const canvasContainer = document.getElementById('canvas-container')!
@@ -174,13 +177,22 @@ assetBrowser.onSpawn = (assetId, x, y) => {
 // ---------- Mistral AI Integration ----------
 const mistralClient = new MistralClient()
 const toolExecutor = new ToolExecutor(world)
+const traceCapture = new TraceCapture()
+const telemetrySession = new TelemetrySession()
 
 chatPanel.onSend = async (text) => {
   chatPanel.addMessage('assistant', 'Thinking...')
 
+  // Check if this is a critique (AI already generated, player is adjusting)
+  const isCritique = traceCapture.hasActiveSnapshot()
+  if (isCritique) {
+    traceCapture.addCritique(text)
+  }
+
   try {
     // Save a snapshot before AI modifies the world (for undo)
     world.saveSnapshot()
+    const allToolCalls: any[] = []
 
     let response = await mistralClient.send(text, world)
 
@@ -190,6 +202,7 @@ chatPanel.onSend = async (text) => {
       const results: { tool_call_id: string; content: string }[] = []
 
       for (const tc of response.toolCalls) {
+        allToolCalls.push(tc)
         let args: unknown
         try {
           args = JSON.parse(tc.function.arguments)
@@ -210,6 +223,11 @@ chatPanel.onSend = async (text) => {
 
       // Send tool results back for follow-up
       response = await mistralClient.sendToolResults(results)
+    }
+
+    // If this was a fresh prompt (not a critique), capture the AI's output as snapshot A
+    if (!isCritique) {
+      traceCapture.captureAISnapshot(world, text, allToolCalls)
     }
 
     // Remove the "Thinking..." message and show the final response
@@ -233,10 +251,17 @@ function removeLastAssistantMessage(): void {
   if (last) last.remove()
 }
 
-// Looks Good -> placeholder (wired to trace capture in Task 8)
-modeToggle.onLooksGood(() => {
-  // Placeholder
-  chatPanel.addMessage('assistant', 'Snapshot captured! (Trace system not yet connected)')
+// Looks Good -> capture trace and submit to telemetry
+modeToggle.onLooksGood(async () => {
+  const trace = traceCapture.capturePlayerApproval(world)
+  if (trace) {
+    await telemetrySession.submitTrace(trace)
+    modeToggle.setTraceCount(telemetrySession.getTraceCount())
+    const kind = trace.type === 'correction' ? 'Correction' : 'Success'
+    showTraceToast(`${kind} captured! (${telemetrySession.getTraceCount()} total)`)
+  } else {
+    showTraceToast('No AI generation to capture yet — send a prompt first!')
+  }
 })
 
 // Start in build mode: disable player input
