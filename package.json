@@ -1,0 +1,11 @@
+{
+  "name": "mistral-maker",
+  "private": true,
+  "workspaces": ["game", "server"],
+  "scripts": {
+    "dev": "npm run dev --workspace=server & npm run dev --workspace=game",
+    "dev:game": "npm run dev --workspace=game",
+    "dev:server": "npm run dev --workspace=server",
+    "build": "npm run build --workspace=game"
+  }
+}

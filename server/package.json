@@ -1,0 +1,23 @@
+{
+  "name": "mistral-maker-server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "~5.9.3",
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "vitest": "^4.0.18"
+  }
+}

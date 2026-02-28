@@ -1,0 +1,56 @@
+:root {
+  --bg: #FDF6F0;
+  --surface: #FFFFFF;
+  --text-primary: #2B2440;
+  --text-secondary: #7A7189;
+  --accent: #F4845F;
+  --accent-light: #FDE8DF;
+  --accent-dark: #D9684A;
+  --border: #E0D8D0;
+  --canvas-bg: #1A1720;
+  --radius: 8px;
+  --shadow: 2px 2px 0px rgba(224, 216, 208, 0.4);
+  --font-brand: 'DM Serif Display', serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-primary);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+.panel {
+  width: 280px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+}
+
+#right-panel {
+  border-right: none;
+  border-left: 1px solid var(--border);
+}
+
+#canvas-container {
+  flex: 1;
+  background: var(--canvas-bg);
+  position: relative;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
