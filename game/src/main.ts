@@ -16,6 +16,8 @@ import { ContextPanel } from './ui/context-panel'
 import { ChatPanel } from './ui/chat-panel'
 import { ModeToggle } from './ui/mode-toggle'
 import { SPRITE_REGISTRY } from './assets/sprites'
+import { MistralClient } from './ai/mistral-client'
+import { ToolExecutor } from './ai/tool-executor'
 
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
 const canvasContainer = document.getElementById('canvas-container')!
@@ -169,10 +171,66 @@ assetBrowser.onSpawn = (assetId, x, y) => {
   world.addComponent(id, { type: 'sprite', assetId, width: sprite.width, height: sprite.height })
 }
 
-// Chat send -> placeholder (wired to Mistral in Task 7)
-chatPanel.onSend = (text) => {
-  // Placeholder: echo back for now
-  chatPanel.addMessage('assistant', `I heard: "${text}". (AI not yet connected)`)
+// ---------- Mistral AI Integration ----------
+const mistralClient = new MistralClient()
+const toolExecutor = new ToolExecutor(world)
+
+chatPanel.onSend = async (text) => {
+  chatPanel.addMessage('assistant', 'Thinking...')
+
+  try {
+    // Save a snapshot before AI modifies the world (for undo)
+    world.saveSnapshot()
+
+    let response = await mistralClient.send(text, world)
+
+    // Tool-calling loop: Mistral may return tool calls, we execute them,
+    // send results back, and Mistral may return more calls or final text.
+    while (response.toolCalls.length > 0) {
+      const results: { tool_call_id: string; content: string }[] = []
+
+      for (const tc of response.toolCalls) {
+        let args: unknown
+        try {
+          args = JSON.parse(tc.function.arguments)
+        } catch {
+          results.push({
+            tool_call_id: tc.id,
+            content: JSON.stringify({ result: 'Failed to parse arguments', error: true }),
+          })
+          continue
+        }
+
+        const result = toolExecutor.execute(tc.function.name, args)
+        results.push({
+          tool_call_id: tc.id,
+          content: JSON.stringify(result),
+        })
+      }
+
+      // Send tool results back for follow-up
+      response = await mistralClient.sendToolResults(results)
+    }
+
+    // Remove the "Thinking..." message and show the final response
+    removeLastAssistantMessage()
+    if (response.textContent) {
+      chatPanel.addMessage('assistant', response.textContent)
+    } else {
+      chatPanel.addMessage('assistant', 'Done! I made the changes you requested.')
+    }
+  } catch (err: unknown) {
+    removeLastAssistantMessage()
+    const message = err instanceof Error ? err.message : String(err)
+    chatPanel.addMessage('assistant', `Error: ${message}`)
+  }
+}
+
+/** Remove the last assistant message (used to clear "Thinking..." indicator). */
+function removeLastAssistantMessage(): void {
+  const messages = document.querySelectorAll('.chat-msg-assistant')
+  const last = messages[messages.length - 1]
+  if (last) last.remove()
 }
 
 // Looks Good -> placeholder (wired to trace capture in Task 8)
