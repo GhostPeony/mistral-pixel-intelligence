@@ -10,7 +10,10 @@
   </head>
   <body>
     <div id="app">
-      <div id="left-panel" class="panel"></div>
+      <div id="left-panel" class="panel" style="display:flex;flex-direction:column;">
+        <div id="asset-browser" style="flex:1;overflow-y:auto;"></div>
+        <div id="chat-panel" style="height:300px;border-top:1px solid var(--border);"></div>
+      </div>
       <div id="canvas-container">
         <canvas id="game-canvas"></canvas>
       </div>

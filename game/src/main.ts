@@ -10,13 +10,22 @@ import { PatrolSystem } from './systems/patrol'
 import { BehaviorSystem } from './systems/behavior'
 import { CombatSystem } from './systems/combat'
 import { DoorSystem } from './systems/door'
+import { CanvasInteraction } from './ui/canvas-interaction'
+import { AssetBrowser } from './ui/asset-browser'
+import { ContextPanel } from './ui/context-panel'
+import { ChatPanel } from './ui/chat-panel'
+import { ModeToggle } from './ui/mode-toggle'
+import { SPRITE_REGISTRY } from './assets/sprites'
 
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
+const canvasContainer = document.getElementById('canvas-container')!
+const leftAssetBrowser = document.getElementById('asset-browser')!
+const leftChatPanel = document.getElementById('chat-panel')!
+const rightPanel = document.getElementById('right-panel')!
 
 function resize() {
-  const container = canvas.parentElement!
-  canvas.width = container.clientWidth
-  canvas.height = container.clientHeight
+  canvas.width = canvasContainer.clientWidth
+  canvas.height = canvasContainer.clientHeight
 }
 resize()
 window.addEventListener('resize', resize)
@@ -31,6 +40,8 @@ const patrolSystem = new PatrolSystem()
 const behaviorSystem = new BehaviorSystem(healthSystem)
 const combatSystem = new CombatSystem(healthSystem)
 const doorSystem = new DoorSystem()
+
+// ---------- Scene Setup ----------
 
 // Ground
 for (let i = 0; i < 30; i++) {
@@ -92,6 +103,89 @@ world.addComponent(skeleton, { type: 'facing', direction: 'left' })
 
 input.setPlayer(player)
 renderer.setFollowTarget(player)
+
+// ---------- UI Setup ----------
+
+// Canvas interaction (build/play mode, drag, pan, zoom)
+const interaction = new CanvasInteraction(canvas, world, renderer)
+
+// Asset browser (left panel top)
+const assetBrowser = new AssetBrowser(leftAssetBrowser)
+
+// Chat panel (left panel bottom)
+const chatPanel = new ChatPanel(leftChatPanel)
+
+// Context panel (right panel)
+const contextPanel = new ContextPanel(rightPanel, world)
+
+// Mode toggle (overlay on canvas)
+const modeToggle = new ModeToggle(canvasContainer)
+
+// ---------- Wire Callbacks ----------
+
+// Entity selection -> context panel
+interaction.onEntitySelected = (id) => {
+  contextPanel.showEntity(id)
+}
+
+// Context panel entity deletion -> deselect in interaction
+contextPanel.onEntityDeleted = (_id) => {
+  interaction.selectedEntityId = null
+  renderer.setSelectedEntity(null)
+}
+
+// Mode changes -> toggle, renderer, input system
+interaction.onModeChange = (mode) => {
+  modeToggle.setMode(mode)
+  renderer.setMode(mode)
+  input.setEnabled(mode === 'play')
+  if (mode === 'play') {
+    renderer.setFollowTarget(player)
+  } else {
+    renderer.setFollowTarget(null)
+  }
+}
+
+// Asset browser drop -> create entity
+interaction.onAssetDrop = (assetId, worldX, worldY) => {
+  const sprite = SPRITE_REGISTRY[assetId]
+  if (!sprite) return
+  world.saveSnapshot()
+  const id = world.createEntity(assetId)
+  world.addComponent(id, { type: 'position', x: worldX, y: worldY })
+  world.addComponent(id, { type: 'sprite', assetId, width: sprite.width, height: sprite.height })
+  interaction.selectedEntityId = id
+  renderer.setSelectedEntity(id)
+  contextPanel.showEntity(id)
+}
+
+// Also support the asset browser's onSpawn callback (click-based spawning)
+assetBrowser.onSpawn = (assetId, x, y) => {
+  const sprite = SPRITE_REGISTRY[assetId]
+  if (!sprite) return
+  world.saveSnapshot()
+  const id = world.createEntity(assetId)
+  world.addComponent(id, { type: 'position', x, y })
+  world.addComponent(id, { type: 'sprite', assetId, width: sprite.width, height: sprite.height })
+}
+
+// Chat send -> placeholder (wired to Mistral in Task 7)
+chatPanel.onSend = (text) => {
+  // Placeholder: echo back for now
+  chatPanel.addMessage('assistant', `I heard: "${text}". (AI not yet connected)`)
+}
+
+// Looks Good -> placeholder (wired to trace capture in Task 8)
+modeToggle.onLooksGood(() => {
+  // Placeholder
+  chatPanel.addMessage('assistant', 'Snapshot captured! (Trace system not yet connected)')
+})
+
+// Start in build mode: disable player input
+input.setEnabled(false)
+renderer.setMode('build')
+
+// ---------- Game Loop ----------
 
 const loop = new GameLoop(
   (dt) => {

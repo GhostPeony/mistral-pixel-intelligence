@@ -54,3 +54,400 @@ body {
   height: 100%;
   display: block;
 }
+
+/* ========== Panel Headers ========== */
+
+.panel-header {
+  font-family: var(--font-brand);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ========== Editor Inputs ========== */
+
+.editor-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.editor-input:focus {
+  border-color: var(--accent);
+}
+
+.editor-input-number {
+  width: 80px;
+}
+
+.editor-checkbox {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.editor-range {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.editor-range-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: right;
+}
+
+select.editor-input {
+  cursor: pointer;
+}
+
+/* ========== Editor Buttons ========== */
+
+.editor-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 8px;
+}
+
+.editor-btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent-dark);
+  box-shadow: var(--shadow);
+}
+
+.editor-btn-primary:hover {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.editor-btn-secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.editor-btn-secondary:hover {
+  background: var(--accent-light);
+}
+
+.editor-btn-danger {
+  background: #FDE8E8;
+  color: #C53030;
+  border-color: #FEB2B2;
+}
+
+.editor-btn-danger:hover {
+  background: #FEB2B2;
+}
+
+.editor-btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.editor-btn-icon:hover {
+  color: #C53030;
+  background: #FDE8E8;
+}
+
+.editor-btn-icon-only {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.editor-btn-icon-only:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+/* ========== Context Panel ========== */
+
+.context-panel {
+  width: 100%;
+}
+
+.context-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.context-empty {
+  padding: 32px 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.context-section {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 12px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.context-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.context-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.behavior-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+.behavior-rule .editor-btn-icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
+/* ========== Asset Browser ========== */
+
+.asset-browser {
+  width: 100%;
+}
+
+.asset-search {
+  margin-bottom: 12px;
+}
+
+.asset-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.asset-category-header {
+  font-family: var(--font-brand);
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 6px;
+}
+
+.asset-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: grab;
+  transition: all 0.15s ease;
+}
+
+.asset-thumb:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.asset-thumb canvas {
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+}
+
+.asset-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-secondary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 56px;
+}
+
+/* ========== Chat Panel ========== */
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+  margin-bottom: 8px;
+}
+
+.chat-msg {
+  display: flex;
+}
+
+.chat-msg-user {
+  justify-content: flex-end;
+}
+
+.chat-msg-assistant {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.chat-bubble-user {
+  background: var(--accent-light);
+  color: var(--text-primary);
+  border-bottom-right-radius: 2px;
+}
+
+.chat-bubble-assistant {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 2px;
+}
+
+.chat-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.15s ease;
+}
+
+.chat-input:focus {
+  border-color: var(--accent);
+}
+
+.chat-btn-row {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* ========== Scrollbar Styling ========== */
+
+.panel ::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.panel ::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.panel ::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.panel ::-webkit-scrollbar-thumb:hover,
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Left panel child containers inherit no padding since panel already has it */
+#left-panel {
+  padding: 0;
+}
+
+#asset-browser {
+  padding: 16px;
+}
+
+#chat-panel {
+  padding: 0;
+}
+
+#right-panel {
+  padding: 16px;
+}
