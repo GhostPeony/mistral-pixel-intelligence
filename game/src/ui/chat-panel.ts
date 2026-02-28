@@ -1,10 +1,12 @@
 export class ChatPanel {
   onSend: ((text: string) => void) | null = null
+  onMicPress: (() => void) | null = null
 
   private container: HTMLElement
   private messageList: HTMLElement
   private inputArea: HTMLTextAreaElement
   private sendBtn: HTMLElement
+  private micBtn: HTMLButtonElement
 
   constructor(parent: HTMLElement) {
     this.container = document.createElement('div')
@@ -39,18 +41,19 @@ export class ChatPanel {
     const btnRow = document.createElement('div')
     btnRow.className = 'chat-btn-row'
 
-    // Mic button placeholder
-    const micBtn = document.createElement('button')
-    micBtn.className = 'editor-btn editor-btn-icon-only'
-    micBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z" fill="currentColor"/><path d="M4 6.5a.5.5 0 0 0-1 0V7a5 5 0 0 0 4.5 4.975V14H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-2.025A5 5 0 0 0 13 7v-.5a.5.5 0 0 0-1 0V7a4 4 0 1 1-8 0v-.5z" fill="currentColor"/></svg>'
-    micBtn.title = 'Voice input (coming soon)'
+    // Mic button
+    this.micBtn = document.createElement('button')
+    this.micBtn.className = 'editor-btn editor-btn-icon-only'
+    this.micBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z" fill="currentColor"/><path d="M4 6.5a.5.5 0 0 0-1 0V7a5 5 0 0 0 4.5 4.975V14H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-2.025A5 5 0 0 0 13 7v-.5a.5.5 0 0 0-1 0V7a4 4 0 1 1-8 0v-.5z" fill="currentColor"/></svg>'
+    this.micBtn.title = 'Voice input'
+    this.micBtn.addEventListener('click', () => this.onMicPress?.())
 
     this.sendBtn = document.createElement('button')
     this.sendBtn.className = 'editor-btn editor-btn-primary'
     this.sendBtn.textContent = 'Send'
     this.sendBtn.addEventListener('click', () => this.send())
 
-    btnRow.appendChild(micBtn)
+    btnRow.appendChild(this.micBtn)
     btnRow.appendChild(this.sendBtn)
 
     inputRow.appendChild(this.inputArea)
@@ -71,6 +74,16 @@ export class ChatPanel {
     msg.appendChild(bubble)
     this.messageList.appendChild(msg)
     this.messageList.scrollTop = this.messageList.scrollHeight
+  }
+
+  setMicRecording(active: boolean): void {
+    if (active) {
+      this.micBtn.classList.add('recording')
+      this.micBtn.style.color = '#e74c3c'
+    } else {
+      this.micBtn.classList.remove('recording')
+      this.micBtn.style.color = ''
+    }
   }
 
   private send(): void {

@@ -18,6 +18,7 @@ import { ModeToggle } from './ui/mode-toggle'
 import { SPRITE_REGISTRY } from './assets/sprites'
 import { MistralClient } from './ai/mistral-client'
 import { ToolExecutor } from './ai/tool-executor'
+import { VoiceService } from './ai/voice'
 import { TraceCapture } from './telemetry/trace-capture'
 import { TelemetrySession } from './telemetry/session'
 import { showTraceToast } from './ui/trace-toast'
@@ -179,6 +180,25 @@ const mistralClient = new MistralClient()
 const toolExecutor = new ToolExecutor(world)
 const traceCapture = new TraceCapture()
 const telemetrySession = new TelemetrySession()
+const voiceService = new VoiceService()
+
+chatPanel.onMicPress = async () => {
+  if (!voiceService.isSupported) {
+    chatPanel.addMessage('assistant', 'Voice input not supported in this browser.')
+    return
+  }
+  chatPanel.setMicRecording(true)
+  try {
+    const text = await voiceService.startListening()
+    chatPanel.setMicRecording(false)
+    if (text) {
+      chatPanel.addMessage('user', text)
+      chatPanel.onSend?.(text)
+    }
+  } catch {
+    chatPanel.setMicRecording(false)
+  }
+}
 
 chatPanel.onSend = async (text) => {
   chatPanel.addMessage('assistant', 'Thinking...')
@@ -234,8 +254,10 @@ chatPanel.onSend = async (text) => {
     removeLastAssistantMessage()
     if (response.textContent) {
       chatPanel.addMessage('assistant', response.textContent)
+      voiceService.speak(response.textContent)
     } else {
       chatPanel.addMessage('assistant', 'Done! I made the changes you requested.')
+      voiceService.speak('Done! I made the changes you requested.')
     }
   } catch (err: unknown) {
     removeLastAssistantMessage()
