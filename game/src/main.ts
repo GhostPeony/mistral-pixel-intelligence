@@ -24,6 +24,7 @@ import { HelpOverlay } from './ui/help-overlay'
 import { PauseMenu } from './ui/pause-menu'
 import { ContextMenu } from './ui/context-menu'
 import { PixelEditor } from './ui/pixel-editor'
+import { BestiaryPanel } from './ui/bestiary-panel'
 import { SPRITE_REGISTRY } from './assets/sprites'
 import { MistralClient } from './ai/mistral-client'
 import { ToolExecutor } from './ai/tool-executor'
@@ -54,48 +55,19 @@ const facingSystem = new FacingSystem()
 const healthSystem = new HealthSystem()
 const patrolSystem = new PatrolSystem()
 const behaviorSystem = new BehaviorSystem(healthSystem)
-const combatSystem = new CombatSystem(healthSystem)
-const doorSystem = new DoorSystem()
-
-// Loot system
 const lootManager = new LootTableManager()
+const combatSystem = new CombatSystem(healthSystem, input, lootManager)
+const doorSystem = new DoorSystem()
 
 // Wire layer manager to systems
 physics.setLayerManager(world.layerManager)
 doorSystem.setLayerManager(world.layerManager)
 
 healthSystem.setOnEntityDeath((entityId, pos, assetId) => {
-  const drop = lootManager.rollDrop(assetId)
-  if (!drop) return
-
   const entity = world.getEntity(entityId)
   const layerComp = entity?.components.get('layer') as import('./ecs/types').LayerComponent | undefined
   const layerId = layerComp?.layerId ?? 'default'
-
-  const dropId = world.createEntity('drop_' + drop.id + '_' + Date.now())
-  world.addComponent(dropId, { type: 'position', x: pos.x, y: pos.y })
-  world.addComponent(dropId, { type: 'sprite', assetId: drop.assetId, width: 24, height: 24 })
-  world.addComponent(dropId, { type: 'physics', velocityX: 0, velocityY: 0, gravity: false, solid: false })
-  world.addComponent(dropId, { type: 'layer', layerId })
-
-  if (drop.itemType === 'consumable') {
-    world.addComponent(dropId, {
-      type: 'consumable',
-      effect: drop.consumableEffect!,
-      value: drop.consumableValue!,
-    })
-  } else {
-    world.addComponent(dropId, {
-      type: 'pickup',
-      itemDef: {
-        id: drop.id,
-        name: drop.name,
-        assetId: drop.assetId,
-        kind: drop.pickupKind!,
-        damage: drop.pickupDamage,
-      },
-    })
-  }
+  combatSystem.spawnLootDrop(world, pos.x, pos.y, assetId, layerId)
 })
 
 // ---------- Scene Setup ----------
@@ -208,11 +180,15 @@ const contextPanel = new ContextPanel(rightPanel, world)
 // Mode toggle (overlay on canvas)
 const modeToggle = new ModeToggle(canvasContainer)
 
+// Bestiary panel (right panel, toggled)
+const bestiaryPanel = new BestiaryPanel(rightPanel, lootManager, renderer)
+
 // ---------- Wire Toolbar Callbacks ----------
 
 toolbar.onSettings = () => settingsPanel.toggle()
 toolbar.onChat = () => chatPanel.toggle()
 toolbar.onBackpack = () => backpackPanel.toggle()
+toolbar.onBestiary = () => bestiaryPanel.toggle()
 
 settingsPanel.onPhysicsChange = (gravity) => {
   physics.setGravity(gravity)
@@ -227,6 +203,20 @@ backpackPanel.onConfigChange = () => {
   physics.setGravity(GAME_CONFIG.physics.gravity)
   input.setWalkSpeed(GAME_CONFIG.player.walkSpeed)
   input.setJumpVelocity(GAME_CONFIG.player.jumpVelocity)
+}
+
+backpackPanel.onDropItem = (itemDef, entityId) => {
+  const pos = world.getComponent(entityId, 'position') as import('./ecs/types').PositionComponent | undefined
+  if (!pos) return
+  const layerComp = world.getEntity(entityId)?.components.get('layer') as import('./ecs/types').LayerComponent | undefined
+  const layerId = layerComp?.layerId ?? 'default'
+
+  const dropId = world.createEntity('dropped_' + itemDef.id)
+  world.addComponent(dropId, { type: 'position', x: pos.x, y: pos.y + 16 })
+  world.addComponent(dropId, { type: 'sprite', assetId: itemDef.assetId, width: 16, height: 16 })
+  world.addComponent(dropId, { type: 'physics', velocityX: 0, velocityY: 0, gravity: true, solid: false })
+  world.addComponent(dropId, { type: 'layer', layerId })
+  world.addComponent(dropId, { type: 'pickup', itemDef: { ...itemDef } })
 }
 
 // ---------- Wire Pause Menu ----------
@@ -282,6 +272,7 @@ function switchControlTo(entityId: string): void {
   if (!entity) return
   controlledEntityId = entityId
   input.setPlayer(entityId)
+  combatSystem.setControlledEntity(entityId)
   renderer.setFollowTarget(entityId)
   renderer.controlledEntityId = entityId
   interaction.controlledEntityId = entityId
@@ -372,8 +363,15 @@ window.addEventListener('keydown', (e) => {
     return
   }
 
-  // B or I key -> toggle backpack
-  if (e.key === 'b' || e.key === 'B' || e.key === 'i' || e.key === 'I') {
+  // B key -> toggle bestiary
+  if (e.key === 'b' || e.key === 'B') {
+    e.preventDefault()
+    bestiaryPanel.toggle()
+    return
+  }
+
+  // I key -> toggle backpack
+  if (e.key === 'i' || e.key === 'I') {
     e.preventDefault()
     backpackPanel.toggle()
     return
@@ -532,6 +530,7 @@ const loop = new GameLoop(
     behaviorSystem.update(world, dt, overlaps)
     combatSystem.update(world, dt, overlaps)
     doorSystem.update(world, dt, overlaps)
+    input.endFrame()
     world.layerManager.updateTransition(dt)
     if (world.layerManager.transition.active) {
       renderer.setTransitionProgress(world.layerManager.transition.progress / world.layerManager.transition.duration)
