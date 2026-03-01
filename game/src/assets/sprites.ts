@@ -51,6 +51,31 @@ const CR = '#FDF6F0' // cream
 const CY = '#A0CED9' // cyan tint
 const RS = '#E8868B' // rose
 
+// --- Skin Tone & Hair Palettes for character diversity ---
+export interface PaletteEntry { base: string; shadow: string }
+
+export const SKIN_PALETTES: PaletteEntry[] = [
+  { base: '#FFE0D0', shadow: '#E8C4B0' }, // Porcelain
+  { base: '#F5D0B0', shadow: '#DDB896' }, // Fair
+  { base: '#EDBC84', shadow: '#D4A06A' }, // Peach (default)
+  { base: '#D4A574', shadow: '#B8895C' }, // Tan
+  { base: '#C09060', shadow: '#A07848' }, // Olive
+  { base: '#8B6240', shadow: '#704E30' }, // Brown
+  { base: '#6B4423', shadow: '#553618' }, // Dark Brown
+  { base: '#4A2E14', shadow: '#3A220E' }, // Deep
+]
+
+export const HAIR_PALETTES: PaletteEntry[] = [
+  { base: '#222222', shadow: '#111111' }, // Black
+  { base: '#553322', shadow: '#3D2216' }, // Brown (default)
+  { base: '#8B3A2A', shadow: '#6B2A1A' }, // Auburn
+  { base: '#D4A84B', shadow: '#B8903A' }, // Blonde
+  { base: '#CC4433', shadow: '#AA3322' }, // Red
+  { base: '#C0C0C0', shadow: '#999999' }, // Silver
+  { base: '#EEEEEE', shadow: '#CCCCCC' }, // White
+  { base: '#1A1A3E', shadow: '#0E0E2A' }, // Blue-Black
+]
+
 // Helper: repeat a value n times in an array
 function r(color: string, n: number): string[] {
   return Array(n).fill(color)
@@ -1352,6 +1377,10 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   deco_bush,
   deco_flower,
   deco_crystal,
+}
+
+export function getAssetIds(): string[] {
+  return Object.keys(SPRITE_REGISTRY)
 }
 
 export const ASSET_IDS = Object.keys(SPRITE_REGISTRY)
