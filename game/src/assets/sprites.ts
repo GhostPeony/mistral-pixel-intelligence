@@ -51,6 +51,31 @@ const CR = '#FDF6F0' // cream
 const CY = '#A0CED9' // cyan tint
 const RS = '#E8868B' // rose
 
+// --- Thief palette ---
+const TK = '#2A2035' // thief cloak dark
+const TM = '#3D2856' // thief cloak mid
+const TL = '#4E3A6B' // thief cloak light
+
+// --- Cleric palette ---
+const WG = '#E0E0E0' // white-gray robe
+const WS = '#C0C0C0' // white-silver robe shadow
+const GT = '#DAA520' // gold trim
+const GS = '#B8860B' // gold trim shadow
+const CB = '#81D4FA' // crystal blue
+
+// --- Berserker palette ---
+const WP = '#E53935' // war paint red (same as DR but explicit)
+const FL = '#8B6240' // fur loincloth light
+const FD = '#6B4423' // fur loincloth dark
+
+// --- Witch palette ---
+const WK = '#1A0E2A' // witch darkest
+const WM = '#2A1A3E' // witch dark
+const WL = '#3D2856' // witch mid (same as TM but explicit for witch)
+const OG = '#9575CD' // orb glow mid
+const OL = '#B39DDB' // orb glow light
+const OD = '#7E57C2' // orb glow dark
+
 // --- Skin Tone & Hair Palettes for character diversity ---
 export interface PaletteEntry { base: string; shadow: string }
 
@@ -231,6 +256,197 @@ const hero_ranger: SpriteData = {
     // Row 30-31: boots
     row(32, [_, 9], [BD, 6], [_, 2], [BD, 6], [_, 9]),
     row(32, [_, 9], [BD, 6], [_, 2], [BD, 6], [_, 9]),
+  ],
+}
+
+const hero_thief: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-2: pointed hood tip
+    row(32, [_, 13], [TK, 6], [_, 13]),
+    row(32, [_, 12], [TK, 2], [TM, 4], [TK, 2], [_, 12]),
+    row(32, [_, 11], [TK, 1], [TM, 8], [TK, 1], [_, 11]),
+    // Row 3-4: hood widens
+    row(32, [_, 10], [TK, 1], [TM, 10], [TK, 1], [_, 10]),
+    row(32, [_, 9], [TK, 1], [TM, 4], [TL, 4], [TM, 4], [TK, 1], [_, 9]),
+    // Row 5-8: face (partially shadowed by hood)
+    row(32, [_, 9], [TK, 1], [TM, 1], [SD, 8], [TM, 1], [TK, 1], [_, 10]),
+    row(32, [_, 10], [TM, 1], [SK, 2], [BK, 2], [SK, 2], [BK, 2], [SK, 2], [TM, 1], [_, 10]),
+    row(32, [_, 10], [TM, 1], [SK, 10], [TM, 1], [_, 10]),
+    row(32, [_, 11], [SK, 3], [SD, 4], [SK, 3], [_, 11]),
+    // Row 9-10: neck/collar
+    row(32, [_, 12], [SD, 8], [_, 12]),
+    row(32, [_, 11], [TK, 1], [TM, 8], [TK, 1], [_, 11]),
+    // Row 11-16: slim torso with cloak
+    row(32, [_, 10], [TK, 1], [TM, 10], [TK, 1], [_, 10]),
+    row(32, [_, 10], [TK, 1], [TM, 4], [TL, 2], [TM, 4], [TK, 1], [_, 10]),
+    row(32, [_, 10], [TK, 1], [TM, 10], [TK, 1], [_, 10]),
+    row(32, [_, 10], [TK, 1], [TM, 10], [TK, 1], [_, 10]),
+    row(32, [_, 10], [TK, 1], [TM, 4], [BD, 2], [TM, 4], [TK, 1], [_, 10]),
+    row(32, [_, 10], [TK, 1], [TM, 10], [TK, 1], [_, 10]),
+    // Row 17-20: arms with daggers at sides
+    row(32, [_, 7], [TM, 3], [TK, 1], [TM, 8], [TK, 1], [TM, 3], [_, 7]),
+    row(32, [_, 6], [SD, 2], [TM, 1], [TK, 1], [TM, 8], [TK, 1], [TM, 1], [SD, 2], [_, 6]),
+    row(32, [_, 5], [SD, 2], [AM, 1], [_, 1], [TK, 1], [TM, 8], [TK, 1], [_, 1], [AM, 1], [SD, 2], [_, 5]),
+    row(32, [_, 5], [SK, 1], [AR, 2], [_, 1], [TK, 1], [TM, 8], [TK, 1], [_, 1], [AR, 2], [SK, 1], [_, 5]),
+    // Row 21-23: belt with buckle, daggers visible
+    row(32, [_, 8], [AR, 1], [_, 1], [BD, 10], [_, 1], [AR, 1], [_, 8]),
+    row(32, [_, 10], [BN, 3], [GD2, 2], [BD, 3], [BN, 2], [_, 10]),
+    row(32, [_, 10], [BD, 12], [_, 10]),
+    // Row 24-28: legs (slim, agile)
+    row(32, [_, 11], [TM, 4], [_, 2], [TM, 4], [_, 11]),
+    row(32, [_, 11], [TM, 4], [_, 2], [TM, 4], [_, 11]),
+    row(32, [_, 11], [TK, 4], [_, 2], [TK, 4], [_, 11]),
+    row(32, [_, 11], [TK, 4], [_, 2], [TK, 4], [_, 11]),
+    row(32, [_, 11], [TK, 4], [_, 2], [TK, 4], [_, 11]),
+    // Row 29-31: boots
+    row(32, [_, 10], [HD, 5], [_, 2], [HD, 5], [_, 10]),
+    row(32, [_, 10], [HD, 5], [_, 2], [HD, 5], [_, 10]),
+    row(32, [_, 10], [BD, 5], [_, 2], [BD, 5], [_, 10]),
+  ],
+}
+
+const hero_cleric: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-1: staff crystal tip (extends above head)
+    row(32, [_, 24], [CB, 3], [_, 5]),
+    row(32, [_, 23], [CB, 1], [OL, 3], [CB, 1], [_, 4]),
+    // Row 2-4: head with short hair, staff beside
+    row(32, [_, 12], [HR, 8], [_, 4], [CB, 1], [BN, 1], [_, 6]),
+    row(32, [_, 11], [HR, 10], [_, 3], [BN, 1], [_, 7]),
+    row(32, [_, 11], [HR, 2], [SK, 6], [HR, 2], [_, 3], [BN, 1], [_, 7]),
+    // Row 5-8: face
+    row(32, [_, 11], [SK, 2], [BK, 2], [SK, 2], [BK, 2], [SK, 2], [_, 3], [BN, 1], [_, 7]),
+    row(32, [_, 11], [SK, 10], [_, 3], [BN, 1], [_, 7]),
+    row(32, [_, 11], [SK, 3], [RS, 4], [SK, 3], [_, 3], [BN, 1], [_, 7]),
+    row(32, [_, 12], [SK, 8], [_, 4], [BN, 1], [_, 7]),
+    // Row 9-10: neck and collar
+    row(32, [_, 13], [SK, 6], [_, 5], [BN, 1], [_, 7]),
+    row(32, [_, 11], [GT, 1], [WH, 8], [GT, 1], [_, 3], [BN, 1], [_, 7]),
+    // Row 11-16: white robe with gold trim, staff alongside
+    row(32, [_, 10], [GT, 1], [WH, 10], [GT, 1], [_, 2], [BN, 1], [_, 7]),
+    row(32, [_, 9], [GT, 1], [WH, 12], [GT, 1], [_, 1], [BN, 1], [_, 7]),
+    row(32, [_, 9], [WG, 1], [WH, 5], [GT, 2], [WH, 5], [WG, 1], [_, 1], [BN, 1], [_, 7]),
+    row(32, [_, 9], [WG, 1], [WH, 12], [WG, 1], [_, 1], [BN, 1], [_, 7]),
+    row(32, [_, 9], [WG, 1], [WH, 12], [WG, 1], [_, 1], [BN, 1], [_, 7]),
+    row(32, [_, 9], [WS, 1], [WG, 12], [WS, 1], [_, 1], [BN, 1], [_, 7]),
+    // Row 17-20: wide sleeves, arms reaching out
+    row(32, [_, 5], [WH, 5], [WG, 12], [WH, 5], [BN, 1], [_, 4]),
+    row(32, [_, 4], [WG, 3], [SK, 2], [WS, 1], [WG, 12], [WS, 1], [SK, 2], [WG, 1], [BN, 1], [_, 3]),
+    row(32, [_, 4], [SK, 3], [_, 2], [WS, 1], [WG, 12], [WS, 1], [_, 1], [SK, 2], [BN, 1], [_, 3]),
+    row(32, [_, 9], [WS, 14], [BN, 1], [_, 8]),
+    // Row 21-23: belt area
+    row(32, [_, 9], [GS, 1], [GT, 12], [GS, 1], [BN, 1], [_, 8]),
+    row(32, [_, 9], [GT, 2], [GS, 2], [GT, 2], [GS, 2], [GT, 2], [GS, 2], [BN, 1], [_, 8]),
+    row(32, [_, 9], [GS, 14], [_, 9]),
+    // Row 24-28: flowing robe bottom (wider)
+    row(32, [_, 8], [WG, 16], [_, 8]),
+    row(32, [_, 7], [WG, 18], [_, 7]),
+    row(32, [_, 7], [WG, 18], [_, 7]),
+    row(32, [_, 7], [WS, 18], [_, 7]),
+    row(32, [_, 7], [WS, 18], [_, 7]),
+    // Row 29-31: robe hem and feet
+    row(32, [_, 7], [GT, 18], [_, 7]),
+    row(32, [_, 8], [WS, 16], [_, 8]),
+    row(32, [_, 10], [BD, 5], [_, 2], [BD, 5], [_, 10]),
+  ],
+}
+
+const hero_berserker: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-2: wild hair (broad)
+    row(32, [_, 10], [HR, 2], [HD, 6], [HR, 2], [_, 12]),
+    row(32, [_, 8], [HR, 3], [HD, 8], [HR, 3], [_, 10]),
+    row(32, [_, 7], [HR, 2], [HD, 12], [HR, 2], [_, 7]),
+    // Row 3-4: forehead with headband
+    row(32, [_, 7], [HD, 2], [SK, 10], [HD, 2], [_, 9]),
+    row(32, [_, 8], [DR, 14], [_, 10]),
+    // Row 5-8: face with war paint
+    row(32, [_, 8], [SK, 2], [WP, 1], [SK, 1], [BK, 2], [SK, 2], [BK, 2], [SK, 1], [WP, 1], [SK, 2], [_, 8]),
+    row(32, [_, 8], [SK, 14], [_, 10]),
+    row(32, [_, 8], [SK, 2], [WP, 2], [SK, 6], [WP, 2], [SK, 2], [_, 8]),
+    row(32, [_, 9], [SK, 3], [SD, 4], [SK, 3], [_, 13]),
+    // Row 9-10: thick neck
+    row(32, [_, 10], [SK, 10], [_, 12]),
+    row(32, [_, 10], [SD, 10], [_, 12]),
+    // Row 11-15: bare broad chest with war paint stripes
+    row(32, [_, 6], [SK, 20], [_, 6]),
+    row(32, [_, 5], [SK, 22], [_, 5]),
+    row(32, [_, 5], [SK, 4], [WP, 2], [SK, 10], [WP, 2], [SK, 4], [_, 5]),
+    row(32, [_, 5], [SK, 5], [WP, 2], [SK, 8], [WP, 2], [SK, 5], [_, 5]),
+    row(32, [_, 5], [SD, 6], [SK, 10], [SD, 6], [_, 5]),
+    // Row 16-18: shoulders transition to arms, axe handle starts
+    row(32, [_, 4], [SD, 3], [SK, 18], [SD, 3], [_, 4]),
+    row(32, [_, 3], [SK, 3], [_, 1], [SD, 2], [SK, 12], [SD, 2], [_, 1], [SK, 3], [_, 3]),
+    row(32, [_, 3], [SD, 2], [SK, 1], [_, 1], [SD, 1], [SK, 12], [SD, 1], [_, 1], [SK, 1], [SD, 2], [BN, 1], [_, 2]),
+    // Row 19-21: arms extend, belt line, axe handle
+    row(32, [_, 3], [SK, 2], [_, 3], [SD, 12], [_, 3], [SK, 2], [BN, 1], [_, 2]),
+    row(32, [_, 9], [BD, 2], [FL, 8], [BD, 2], [_, 2], [BN, 1], [_, 6]),
+    row(32, [_, 9], [FL, 2], [GD2, 2], [FD, 4], [GD2, 2], [FL, 2], [BN, 1], [_, 6]),
+    // Row 22-23: fur loincloth with axe head appearing
+    row(32, [_, 9], [FD, 14], [BN, 1], [_, 8]),
+    row(32, [_, 10], [FL, 5], [_, 2], [FL, 5], [AM, 3], [_, 7]),
+    // Row 24-27: legs, axe head at side
+    row(32, [_, 10], [SK, 5], [_, 2], [SK, 5], [AD, 1], [AM, 3], [_, 6]),
+    row(32, [_, 10], [SK, 5], [_, 2], [SK, 5], [_, 1], [AM, 3], [_, 4]),
+    row(32, [_, 10], [SD, 5], [_, 2], [SD, 5], [_, 1], [AD, 2], [_, 5]),
+    row(32, [_, 10], [SD, 5], [_, 2], [SD, 5], [_, 10]),
+    // Row 28-29: lower legs
+    row(32, [_, 10], [FD, 5], [_, 2], [FD, 5], [_, 10]),
+    row(32, [_, 10], [FD, 5], [_, 2], [FD, 5], [_, 10]),
+    // Row 30-31: fur-wrapped boots
+    row(32, [_, 9], [FL, 6], [_, 2], [FL, 6], [_, 9]),
+    row(32, [_, 9], [FD, 6], [_, 2], [FD, 6], [_, 9]),
+  ],
+}
+
+const hero_witch: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-3: tall pointed hat (very tall — key silhouette feature)
+    row(32, [_, 14], [WK, 2], [_, 16]),
+    row(32, [_, 13], [WK, 1], [WM, 2], [WK, 1], [_, 15]),
+    row(32, [_, 12], [WK, 1], [WM, 4], [WK, 1], [_, 14]),
+    row(32, [_, 11], [WK, 1], [WM, 6], [WK, 1], [_, 13]),
+    // Row 4-5: hat widens with band
+    row(32, [_, 10], [WK, 1], [WM, 8], [WK, 1], [_, 12]),
+    row(32, [_, 9], [WK, 1], [OG, 10], [WK, 1], [_, 11]),
+    // Row 6-7: hat brim
+    row(32, [_, 7], [WK, 18], [_, 7]),
+    row(32, [_, 6], [WK, 20], [_, 6]),
+    // Row 8-11: face
+    row(32, [_, 10], [WK, 1], [SK, 10], [WK, 1], [_, 10]),
+    row(32, [_, 10], [_, 1], [SK, 2], [BK, 2], [SK, 2], [BK, 2], [SK, 2], [_, 1], [_, 10]),
+    row(32, [_, 11], [SK, 10], [_, 11]),
+    row(32, [_, 11], [SK, 3], [PL, 4], [SK, 3], [_, 11]),
+    // Row 12-13: neck and collar
+    row(32, [_, 12], [SK, 8], [_, 12]),
+    row(32, [_, 10], [WK, 1], [WM, 10], [WK, 1], [_, 10]),
+    // Row 14-19: dark flowing robes
+    row(32, [_, 9], [WK, 1], [WM, 12], [WK, 1], [_, 9]),
+    row(32, [_, 9], [WK, 1], [WM, 5], [GD2, 2], [WM, 5], [WK, 1], [_, 9]),
+    row(32, [_, 9], [WK, 1], [WM, 12], [WK, 1], [_, 9]),
+    row(32, [_, 9], [WK, 1], [WL, 12], [WK, 1], [_, 9]),
+    row(32, [_, 9], [WK, 1], [WM, 12], [WK, 1], [_, 9]),
+    row(32, [_, 9], [WK, 1], [WM, 12], [WK, 1], [_, 9]),
+    // Row 20-22: sleeves, one hand holds glowing orb
+    row(32, [_, 6], [WM, 3], [WK, 1], [WM, 12], [WK, 1], [WM, 3], [_, 6]),
+    row(32, [_, 5], [SK, 2], [WM, 1], [WK, 1], [WM, 12], [WK, 1], [WM, 1], [SK, 2], [_, 5]),
+    row(32, [OG, 2], [OL, 1], [SK, 2], [_, 1], [WK, 1], [WM, 12], [WK, 1], [_, 1], [SK, 2], [_, 5]),
+    // Row 23-24: orb glow and belt
+    row(32, [OD, 1], [OG, 2], [OL, 1], [_, 5], [GT, 1], [GD2, 10], [GT, 1], [_, 9]),
+    row(32, [_, 1], [OG, 1], [_, 7], [GS, 14], [_, 9]),
+    // Row 25-28: robe flows out wide
+    row(32, [_, 8], [WM, 16], [_, 8]),
+    row(32, [_, 7], [WM, 18], [_, 7]),
+    row(32, [_, 7], [WK, 18], [_, 7]),
+    row(32, [_, 7], [WK, 18], [_, 7]),
+    // Row 29-31: robe hem and feet
+    row(32, [_, 7], [WK, 1], [WM, 16], [WK, 1], [_, 7]),
+    row(32, [_, 8], [WK, 16], [_, 8]),
+    row(32, [_, 10], [WK, 5], [_, 2], [WK, 5], [_, 10]),
   ],
 }
 
@@ -1334,6 +1550,10 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   hero_knight,
   hero_mage,
   hero_ranger,
+  hero_thief,
+  hero_cleric,
+  hero_berserker,
+  hero_witch,
   // Enemies
   enemy_skeleton,
   enemy_slime,
