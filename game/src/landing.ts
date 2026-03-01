@@ -1,5 +1,6 @@
 import './landing.css'
 import { SPRITE_REGISTRY, type SpriteData } from './assets/sprites'
+import { CharacterCreator } from './ui/character-creator'
 
 interface CharacterRecord {
   id: number
@@ -14,6 +15,7 @@ interface CharacterRecord {
 }
 
 let selectedCharacterId: number | null = null
+const creator = new CharacterCreator(() => loadCharacters())
 
 async function init() {
   renderSpriteShowcase()
@@ -135,8 +137,8 @@ function setupPlayButton() {
   })
 }
 
-function openCharacterCreator(_existingChar?: CharacterRecord) {
-  // Task 4 will implement the character creator
+function openCharacterCreator(existingChar?: CharacterRecord) {
+  creator.open(existingChar)
 }
 
 init()
