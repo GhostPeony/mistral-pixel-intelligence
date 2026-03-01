@@ -147,6 +147,15 @@ const DMH = '#222222' // demon horn/hoof
 const DMH2 = '#333333' // demon horn light
 const DME = '#FFC107' // demon eyes
 
+// --- Healer palette ---
+const HRL = '#C8E6C9' // healer robe light
+const HRM = '#A5D6A7' // healer robe mid
+const HRD = '#81C784' // healer robe dark
+
+// --- Elder palette ---
+const EBL = '#EEEEEE' // elder beard light
+const EBD = '#CCCCCC' // elder beard dark
+
 // --- Skin Tone & Hair Palettes for character diversity ---
 export interface PaletteEntry { base: string; shadow: string }
 
@@ -1080,6 +1089,191 @@ const npc_merchant: SpriteData = {
     // Row 30-31: boots
     row(32, [_, 9], [BK, 6], [_, 2], [BK, 6], [_, 9]),
     row(32, [_, 9], [BK, 6], [_, 2], [BK, 6], [_, 9]),
+  ],
+}
+
+const npc_blacksmith: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-3: short dark hair
+    row(32, [_, 12], [HD, 8], [_, 12]),
+    row(32, [_, 10], [HD, 12], [_, 10]),
+    row(32, [_, 10], [HD, 12], [_, 10]),
+    row(32, [_, 10], [HD, 12], [_, 10]),
+    // Row 4-8: face — broad & rugged
+    row(32, [_, 10], [HD, 1], [SK, 10], [HD, 1], [_, 10]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 2], [BK, 2], [SK, 4], [BK, 2], [SK, 2], [_, 10]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 4], [SD, 4], [SK, 4], [_, 10]),
+    // Row 9-10: thick neck
+    row(32, [_, 11], [SK, 10], [_, 11]),
+    row(32, [_, 11], [SK, 10], [_, 11]),
+    // Row 11-17: leather apron over bare chest — broad shoulders
+    row(32, [_, 7], [SK, 3], [BN, 12], [SK, 3], [_, 7]),
+    row(32, [_, 6], [SK, 3], [BD, 2], [BN, 10], [BD, 2], [SK, 3], [_, 6]),
+    row(32, [_, 6], [SK, 3], [BD, 2], [BN, 10], [BD, 2], [SK, 3], [_, 6]),
+    row(32, [_, 6], [SK, 3], [BD, 2], [BN, 10], [BD, 2], [SK, 3], [_, 6]),
+    row(32, [_, 6], [SK, 3], [BD, 2], [BN, 4], [BK, 2], [BN, 4], [BD, 2], [SK, 3], [_, 6]),
+    row(32, [_, 6], [SK, 3], [BD, 2], [BN, 10], [BD, 2], [SK, 3], [_, 6]),
+    row(32, [_, 6], [SK, 3], [BD, 2], [BN, 10], [BD, 2], [SK, 3], [_, 6]),
+    // Row 18-21: arms — left bare, right holds hammer up
+    row(32, [_, 5], [SK, 3], [BD, 2], [BN, 10], [BD, 2], [SK, 3], [_, 5]),
+    row(32, [_, 4], [SK, 3], [_, 1], [BD, 14], [_, 1], [AM, 2], [AR, 1], [_, 6]),
+    row(32, [_, 4], [SK, 2], [_, 2], [BD, 14], [_, 2], [AM, 2], [_, 6]),
+    row(32, [_, 8], [BD, 14], [_, 2], [AM, 2], [_, 6]),
+    // Row 22-24: belt with soot marks
+    row(32, [_, 9], [BK, 1], [AD, 12], [BK, 1], [_, 9]),
+    row(32, [_, 9], [AD, 14], [_, 9]),
+    row(32, [_, 9], [BK, 1], [AD, 12], [BK, 1], [_, 9]),
+    // Row 25-29: simple dark pants
+    row(32, [_, 10], [SN, 5], [_, 2], [SN, 5], [_, 10]),
+    row(32, [_, 10], [SN, 5], [_, 2], [SN, 5], [_, 10]),
+    row(32, [_, 10], [AD, 5], [_, 2], [AD, 5], [_, 10]),
+    row(32, [_, 10], [AD, 5], [_, 2], [AD, 5], [_, 10]),
+    row(32, [_, 10], [AD, 5], [_, 2], [AD, 5], [_, 10]),
+    // Row 30-31: boots
+    row(32, [_, 9], [BK, 6], [_, 2], [BK, 6], [_, 9]),
+    row(32, [_, 9], [BK, 6], [_, 2], [BK, 6], [_, 9]),
+  ],
+}
+
+const npc_healer: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-3: hair with white headband
+    row(32, [_, 12], [HR, 8], [_, 12]),
+    row(32, [_, 10], [HR, 12], [_, 10]),
+    row(32, [_, 9], [WH, 14], [_, 9]),
+    row(32, [_, 9], [HR, 14], [_, 9]),
+    // Row 4-8: gentle face
+    row(32, [_, 9], [HR, 2], [SK, 10], [HR, 2], [_, 9]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 2], [BK, 2], [SK, 4], [BK, 2], [SK, 2], [_, 10]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 4], [RS, 4], [SK, 4], [_, 10]),
+    // Row 9-10: neck
+    row(32, [_, 11], [SK, 10], [_, 11]),
+    row(32, [_, 12], [SK, 8], [_, 12]),
+    // Row 11-17: flowing green-white robes
+    row(32, [_, 9], [HRL, 14], [_, 9]),
+    row(32, [_, 8], [HRL, 2], [HRM, 12], [HRL, 2], [_, 8]),
+    row(32, [_, 8], [HRL, 2], [HRM, 12], [HRL, 2], [_, 8]),
+    row(32, [_, 8], [HRL, 2], [HRM, 12], [HRL, 2], [_, 8]),
+    row(32, [_, 8], [HRL, 2], [HRM, 12], [HRL, 2], [_, 8]),
+    row(32, [_, 7], [HRL, 2], [HRM, 14], [HRL, 2], [_, 7]),
+    row(32, [_, 7], [HRL, 2], [HRM, 14], [HRL, 2], [_, 7]),
+    // Row 18-21: arms with sleeves
+    row(32, [_, 5], [SK, 2], [HRD, 2], [HRM, 14], [HRD, 2], [SK, 2], [_, 5]),
+    row(32, [_, 5], [SK, 2], [_, 1], [HRD, 2], [HRM, 12], [HRD, 2], [_, 1], [SK, 2], [_, 5]),
+    row(32, [_, 5], [SK, 2], [_, 2], [HRD, 14], [_, 2], [SK, 2], [_, 5]),
+    row(32, [_, 9], [HRD, 14], [_, 9]),
+    // Row 22-24: belt with herbal pouches
+    row(32, [_, 9], [BD, 3], [BN, 4], [BD, 3], [BN, 4], [_, 9]),
+    row(32, [_, 9], [BN, 14], [_, 9]),
+    row(32, [_, 9], [BD, 14], [_, 9]),
+    // Row 25-29: robe bottom — flowing
+    row(32, [_, 8], [HRM, 7], [_, 2], [HRM, 7], [_, 8]),
+    row(32, [_, 8], [HRM, 7], [_, 2], [HRM, 7], [_, 8]),
+    row(32, [_, 8], [HRD, 7], [_, 2], [HRD, 7], [_, 8]),
+    row(32, [_, 8], [HRD, 7], [_, 2], [HRD, 7], [_, 8]),
+    row(32, [_, 7], [HRD, 8], [_, 2], [HRD, 8], [_, 7]),
+    // Row 30-31: sandals
+    row(32, [_, 9], [BN, 6], [_, 2], [BN, 6], [_, 9]),
+    row(32, [_, 9], [BN, 6], [_, 2], [BN, 6], [_, 9]),
+  ],
+}
+
+const npc_guard: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-1: spear tip extends above head
+    row(32, [_, 24], [AR, 2], [_, 6]),
+    row(32, [_, 24], [AR, 2], [_, 6]),
+    // Row 2-5: helmet with visor
+    row(32, [_, 11], [AM, 10], [_, 3], [BN, 2], [_, 6]),
+    row(32, [_, 10], [AR, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 10], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 10], [AD, 2], [BK, 8], [AD, 2], [_, 2], [BN, 2], [_, 6]),
+    // Row 6-8: face below visor
+    row(32, [_, 10], [SK, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 10], [SK, 4], [SD, 4], [SK, 4], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 11], [SK, 10], [_, 3], [BN, 2], [_, 6]),
+    // Row 9-10: neck / gorget
+    row(32, [_, 11], [AM, 10], [_, 3], [BN, 2], [_, 6]),
+    row(32, [_, 12], [AD, 8], [_, 4], [BN, 2], [_, 6]),
+    // Row 11-17: armor + shield on left arm
+    row(32, [_, 5], [AM, 4], [AD, 1], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 4], [AM, 5], [AD, 1], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 4], [AR, 1], [AM, 4], [AD, 1], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 4], [AM, 5], [AD, 1], [AM, 5], [GD2, 2], [AM, 5], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 4], [AR, 1], [AM, 4], [AD, 1], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 4], [AM, 5], [AD, 1], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    row(32, [_, 5], [AM, 4], [AD, 1], [AM, 12], [_, 2], [BN, 2], [_, 6]),
+    // Row 18-21: arms — left holds shield, right holds spear
+    row(32, [_, 4], [AM, 5], [AD, 1], [AM, 12], [SK, 2], [BN, 2], [_, 6]),
+    row(32, [_, 4], [AM, 5], [_, 1], [AD, 12], [_, 1], [SK, 1], [BD, 2], [_, 6]),
+    row(32, [_, 4], [AD, 5], [_, 2], [AD, 12], [_, 2], [BD, 2], [_, 5]),
+    row(32, [_, 9], [AD, 14], [_, 1], [BD, 2], [_, 6]),
+    // Row 22-24: belt
+    row(32, [_, 9], [AD, 2], [SN, 10], [AD, 2], [_, 9]),
+    row(32, [_, 9], [SN, 14], [_, 9]),
+    row(32, [_, 9], [AD, 14], [_, 9]),
+    // Row 25-29: uniform pants
+    row(32, [_, 10], [SN, 5], [_, 2], [SN, 5], [_, 10]),
+    row(32, [_, 10], [SN, 5], [_, 2], [SN, 5], [_, 10]),
+    row(32, [_, 10], [AD, 5], [_, 2], [AD, 5], [_, 10]),
+    row(32, [_, 10], [AD, 5], [_, 2], [AD, 5], [_, 10]),
+    row(32, [_, 10], [AD, 5], [_, 2], [AD, 5], [_, 10]),
+    // Row 30-31: armored boots
+    row(32, [_, 9], [AM, 6], [_, 2], [AM, 6], [_, 9]),
+    row(32, [_, 9], [AD, 6], [_, 2], [AD, 6], [_, 9]),
+  ],
+}
+
+const npc_elder: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-3: bald head — slightly forward
+    row(32, [_, 11], [SD, 10], [_, 11]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    // Row 4-8: weathered face with brows, long white beard starts
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 2], [BK, 2], [SK, 4], [BK, 2], [SK, 2], [_, 10]),
+    row(32, [_, 10], [SK, 12], [_, 10]),
+    row(32, [_, 10], [SK, 3], [EBL, 6], [SK, 3], [_, 10]),
+    row(32, [_, 10], [SK, 2], [EBL, 8], [SK, 2], [_, 10]),
+    // Row 9-11: beard continues, neck hidden
+    row(32, [_, 10], [SK, 1], [EBL, 10], [SK, 1], [_, 10]),
+    row(32, [_, 11], [EBL, 10], [_, 11]),
+    row(32, [_, 11], [EBD, 10], [_, 11]),
+    // Row 12-17: purple robes — slightly hunched, staff on right side
+    row(32, [_, 8], [PL, 16], [_, 2], [BN, 2], [_, 4]),
+    row(32, [_, 7], [PL, 3], [PD, 12], [PL, 3], [BN, 2], [_, 4]),
+    row(32, [_, 7], [PL, 3], [PD, 12], [PL, 3], [BN, 2], [_, 4]),
+    row(32, [_, 7], [PL, 3], [PD, 12], [PL, 3], [BN, 2], [_, 4]),
+    row(32, [_, 7], [PL, 3], [PD, 12], [PL, 3], [BN, 2], [_, 4]),
+    row(32, [_, 7], [PL, 3], [PD, 12], [PL, 3], [BN, 2], [_, 4]),
+    // Row 18-21: arms in robes — right hand grips staff
+    row(32, [_, 5], [SK, 2], [PL, 3], [PD, 12], [PL, 1], [SK, 1], [BD, 2], [_, 4]),
+    row(32, [_, 5], [SK, 2], [_, 1], [PL, 2], [PD, 12], [_, 1], [SK, 1], [BD, 2], [_, 4]),
+    row(32, [_, 5], [SK, 2], [_, 2], [PD, 14], [_, 1], [BD, 2], [_, 4]),
+    row(32, [_, 9], [PD, 14], [_, 1], [BD, 2], [_, 6]),
+    // Row 22-24: sash / belt
+    row(32, [_, 9], [GD2, 1], [PD, 12], [GD2, 1], [BD, 2], [_, 5]),
+    row(32, [_, 9], [PD, 14], [_, 1], [BD, 2], [_, 6]),
+    row(32, [_, 9], [GD2, 1], [PD, 12], [GD2, 1], [BD, 2], [_, 5]),
+    // Row 25-29: robe bottom — flowing, staff continues
+    row(32, [_, 8], [PL, 7], [_, 2], [PL, 7], [BD, 2], [_, 4]),
+    row(32, [_, 8], [PL, 7], [_, 2], [PL, 7], [BD, 2], [_, 4]),
+    row(32, [_, 7], [PD, 8], [_, 2], [PD, 8], [BD, 2], [_, 3]),
+    row(32, [_, 7], [PD, 8], [_, 2], [PD, 8], [BD, 2], [_, 3]),
+    row(32, [_, 7], [PD, 8], [_, 2], [PD, 8], [BD, 2], [_, 3]),
+    // Row 30-31: sandals + staff base
+    row(32, [_, 9], [BD, 5], [_, 2], [BD, 5], [BD, 2], [_, 7]),
+    row(32, [_, 9], [BD, 5], [_, 2], [BD, 5], [BN, 2], [_, 7]),
   ],
 }
 
@@ -2627,6 +2821,10 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   // NPCs
   npc_villager,
   npc_merchant,
+  npc_blacksmith,
+  npc_healer,
+  npc_guard,
+  npc_elder,
   // Tiles
   tile_grass,
   tile_stone,
