@@ -23,13 +23,20 @@ export class Toolbar {
 
     const logo = document.createElement('span')
     logo.className = 'toolbar-logo'
-    logo.textContent = 'Mistral Maker'
+    logo.textContent = 'Q-Bit and Build'
     left.appendChild(logo)
 
     left.appendChild(this.makeBtn('New', () => this.handleNew()))
     left.appendChild(this.makeBtn('Save', () => this.handleSave()))
     left.appendChild(this.makeBtn('Load', () => this.handleLoad()))
     left.appendChild(this.makeBtn('Export JSON', () => this.handleExport()))
+
+    const homeLink = document.createElement('a')
+    homeLink.className = 'toolbar-btn'
+    homeLink.textContent = 'Menu'
+    homeLink.href = '/landing.html'
+    homeLink.style.textDecoration = 'none'
+    left.appendChild(homeLink)
 
     const dashLink = document.createElement('a')
     dashLink.className = 'toolbar-btn'

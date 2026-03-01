@@ -11,6 +11,8 @@ import { BehaviorSystem } from './systems/behavior'
 import { CombatSystem } from './systems/combat'
 import { DoorSystem } from './systems/door'
 import { LootTableManager } from './data/loot-tables'
+import { DialogueManager } from './data/npc-dialogue'
+import { VFXSystem } from './systems/vfx'
 import { CanvasInteraction } from './ui/canvas-interaction'
 import { AssetBrowser } from './ui/asset-browser'
 import { ContextPanel } from './ui/context-panel'
@@ -56,8 +58,15 @@ const healthSystem = new HealthSystem()
 const patrolSystem = new PatrolSystem()
 const behaviorSystem = new BehaviorSystem(healthSystem)
 const lootManager = new LootTableManager()
+const dialogueManager = new DialogueManager()
+const vfx = new VFXSystem()
 const combatSystem = new CombatSystem(healthSystem, input, lootManager)
 const doorSystem = new DoorSystem()
+
+// Wire VFX
+renderer.setVFX(vfx)
+combatSystem.setVFX(vfx)
+healthSystem.setVFX(vfx)
 
 // Wire layer manager to systems
 physics.setLayerManager(world.layerManager)
@@ -68,6 +77,18 @@ healthSystem.setOnEntityDeath((entityId, pos, assetId) => {
   const layerComp = entity?.components.get('layer') as import('./ecs/types').LayerComponent | undefined
   const layerId = layerComp?.layerId ?? 'default'
   combatSystem.spawnLootDrop(world, pos.x, pos.y, assetId, layerId)
+})
+
+// Wire NPC voice lines
+behaviorSystem.setOnSayVoice((entityId, npcType) => {
+  if (voiceService.isSpeaking) return
+  const profile = dialogueManager.getProfile(npcType)
+  if (!profile) return
+  const line = dialogueManager.pickLine(npcType)
+  if (!line) return
+  behaviorSystem.setVoiceCooldown(entityId, profile.cooldownMs)
+  vfx.addSpeechBubble(entityId, line.text)
+  voiceService.speak(line.text, profile.voiceId)
 })
 
 // ---------- Scene Setup ----------
@@ -138,6 +159,22 @@ world.addComponent(skeleton, {
   }],
 })
 world.addComponent(skeleton, { type: 'facing', direction: 'left' })
+
+// NPC Guard
+const guard = world.createEntity('npc_guard')
+world.addComponent(guard, { type: 'position', x: 100, y: 368 })
+world.addComponent(guard, { type: 'sprite', assetId: 'hero_knight', width: 32, height: 32, hueShift: 200 })
+world.addComponent(guard, { type: 'physics', velocityX: 0, velocityY: 0, gravity: true, solid: true })
+world.addComponent(guard, {
+  type: 'behavior',
+  rules: [{
+    id: 'guard_bark',
+    description: 'Bark a voice line when player is nearby',
+    trigger: 'on_proximity 80',
+    action: 'say_voice npc_guard',
+    enabled: true,
+  }],
+})
 
 // input.setPlayer and renderer.setFollowTarget handled by switchControlTo below
 
@@ -292,8 +329,64 @@ function switchControlTo(entityId: string): void {
   }
 }
 
+// ---------- Custom Character from URL ----------
+
+async function loadCustomCharacter(): Promise<void> {
+  const params = new URLSearchParams(window.location.search)
+  const charId = params.get('character')
+  if (!charId) return
+
+  try {
+    const res = await fetch(`/api/characters/${charId}`)
+    if (!res.ok) return
+    const char = await res.json()
+
+    const spriteData = JSON.parse(char.sprite_data)
+    const assetId = `player_${char.id}`
+
+    // Register in sprite registry
+    SPRITE_REGISTRY[assetId] = spriteData
+
+    // Build offscreen canvas for renderer
+    const offscreen = document.createElement('canvas')
+    offscreen.width = spriteData.width
+    offscreen.height = spriteData.height
+    const ctx = offscreen.getContext('2d')!
+    const imageData = ctx.createImageData(spriteData.width, spriteData.height)
+    for (let y = 0; y < spriteData.height; y++) {
+      for (let x = 0; x < spriteData.width; x++) {
+        const hex = spriteData.pixels[y]?.[x]
+        if (hex) {
+          const i = (y * spriteData.width + x) * 4
+          imageData.data[i] = parseInt(hex.slice(1, 3), 16)
+          imageData.data[i + 1] = parseInt(hex.slice(3, 5), 16)
+          imageData.data[i + 2] = parseInt(hex.slice(5, 7), 16)
+          imageData.data[i + 3] = 255
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0)
+    renderer.registerSprite(assetId, offscreen)
+
+    // Update hero sprite
+    const heroEntity = world.getEntity(player)
+    if (heroEntity) {
+      const sprite = heroEntity.components.get('sprite') as import('./ecs/types').SpriteComponent
+      if (sprite) {
+        sprite.assetId = assetId
+        sprite.width = spriteData.width
+        sprite.height = spriteData.height
+        if (char.hue_shift) sprite.hueShift = char.hue_shift
+      }
+    }
+  } catch {
+    // Character loading failed, proceed with default hero
+  }
+}
+
 // Initialize control
 switchControlTo(player)
+loadCustomCharacter()
 backpackPanel.setEntity(player)
 interaction.setOnControlSwitch(switchControlTo)
 
@@ -459,7 +552,16 @@ chatPanel.onSend = async (text) => {
 
     // If this was a fresh prompt (not a critique), capture the AI's output as snapshot A
     if (!isCritique) {
-      traceCapture.captureAISnapshot(world, text, allToolCalls)
+      // Synthesize cognitive data from model response
+      const cognitive: import('./telemetry/types').CognitiveData = {}
+      if (response.textContent) {
+        cognitive.thinking = response.textContent
+      }
+      if (allToolCalls.length > 0) {
+        cognitive.plan = allToolCalls.map(tc => tc.function.name).join(' → ')
+        cognitive.decisionRationale = `${allToolCalls.length} tool calls for: ${text.slice(0, 100)}`
+      }
+      traceCapture.captureAISnapshot(world, text, allToolCalls, cognitive)
     }
 
     // Remove the "Thinking..." message and show the final response
@@ -530,6 +632,7 @@ const loop = new GameLoop(
     behaviorSystem.update(world, dt, overlaps)
     combatSystem.update(world, dt, overlaps)
     doorSystem.update(world, dt, overlaps)
+    vfx.update(dt)
     input.endFrame()
     world.layerManager.updateTransition(dt)
     if (world.layerManager.transition.active) {
