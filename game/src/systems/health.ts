@@ -1,7 +1,11 @@
 import type { World } from '../ecs/world'
-import type { HealthComponent, PositionComponent, PhysicsComponent } from '../ecs/types'
+import type { HealthComponent, PositionComponent, PhysicsComponent, SpriteComponent } from '../ecs/types'
 
 export class HealthSystem {
+  private onDeath: ((entityId: string, pos: { x: number; y: number }, assetId: string) => void) | null = null
+
+  setOnEntityDeath(cb: typeof this.onDeath): void { this.onDeath = cb }
+
   update(world: World, dt: number): void {
     for (const entity of world.query('health')) {
       const health = entity.components.get('health') as HealthComponent
@@ -13,6 +17,14 @@ export class HealthSystem {
 
       // Death and respawn
       if (health.hp <= 0 && health.deadTimer === 0) {
+        // Fire death callback for loot drops
+        if (this.onDeath) {
+          const pos = entity.components.get('position') as PositionComponent | undefined
+          const sprite = entity.components.get('sprite') as SpriteComponent | undefined
+          if (pos && sprite) {
+            this.onDeath(entity.id, { x: pos.x, y: pos.y }, sprite.assetId)
+          }
+        }
         health.deadTimer = health.respawnDelay || 1000
       }
 

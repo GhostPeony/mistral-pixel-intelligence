@@ -10,11 +10,20 @@ import { PatrolSystem } from './systems/patrol'
 import { BehaviorSystem } from './systems/behavior'
 import { CombatSystem } from './systems/combat'
 import { DoorSystem } from './systems/door'
+import { LootTableManager } from './data/loot-tables'
 import { CanvasInteraction } from './ui/canvas-interaction'
 import { AssetBrowser } from './ui/asset-browser'
 import { ContextPanel } from './ui/context-panel'
 import { ChatPanel } from './ui/chat-panel'
 import { ModeToggle } from './ui/mode-toggle'
+import { Toolbar } from './ui/toolbar'
+import { SettingsPanel } from './ui/settings-panel'
+import { BackpackPanel } from './ui/backpack-panel'
+import { GAME_CONFIG } from './config/game-config'
+import { HelpOverlay } from './ui/help-overlay'
+import { PauseMenu } from './ui/pause-menu'
+import { ContextMenu } from './ui/context-menu'
+import { PixelEditor } from './ui/pixel-editor'
 import { SPRITE_REGISTRY } from './assets/sprites'
 import { MistralClient } from './ai/mistral-client'
 import { ToolExecutor } from './ai/tool-executor'
@@ -23,10 +32,11 @@ import { TraceCapture } from './telemetry/trace-capture'
 import { TelemetrySession } from './telemetry/session'
 import { showTraceToast } from './ui/trace-toast'
 
+const appEl = document.getElementById('app')!
+const toolbarEl = document.getElementById('toolbar')!
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement
 const canvasContainer = document.getElementById('canvas-container')!
 const leftAssetBrowser = document.getElementById('asset-browser')!
-const leftChatPanel = document.getElementById('chat-panel')!
 const rightPanel = document.getElementById('right-panel')!
 
 function resize() {
@@ -46,6 +56,47 @@ const patrolSystem = new PatrolSystem()
 const behaviorSystem = new BehaviorSystem(healthSystem)
 const combatSystem = new CombatSystem(healthSystem)
 const doorSystem = new DoorSystem()
+
+// Loot system
+const lootManager = new LootTableManager()
+
+// Wire layer manager to systems
+physics.setLayerManager(world.layerManager)
+doorSystem.setLayerManager(world.layerManager)
+
+healthSystem.setOnEntityDeath((entityId, pos, assetId) => {
+  const drop = lootManager.rollDrop(assetId)
+  if (!drop) return
+
+  const entity = world.getEntity(entityId)
+  const layerComp = entity?.components.get('layer') as import('./ecs/types').LayerComponent | undefined
+  const layerId = layerComp?.layerId ?? 'default'
+
+  const dropId = world.createEntity('drop_' + drop.id + '_' + Date.now())
+  world.addComponent(dropId, { type: 'position', x: pos.x, y: pos.y })
+  world.addComponent(dropId, { type: 'sprite', assetId: drop.assetId, width: 24, height: 24 })
+  world.addComponent(dropId, { type: 'physics', velocityX: 0, velocityY: 0, gravity: false, solid: false })
+  world.addComponent(dropId, { type: 'layer', layerId })
+
+  if (drop.itemType === 'consumable') {
+    world.addComponent(dropId, {
+      type: 'consumable',
+      effect: drop.consumableEffect!,
+      value: drop.consumableValue!,
+    })
+  } else {
+    world.addComponent(dropId, {
+      type: 'pickup',
+      itemDef: {
+        id: drop.id,
+        name: drop.name,
+        assetId: drop.assetId,
+        kind: drop.pickupKind!,
+        damage: drop.pickupDamage,
+      },
+    })
+  }
+})
 
 // ---------- Scene Setup ----------
 
@@ -80,6 +131,15 @@ world.addComponent(player, {
     accessory: null,
   },
 })
+world.addComponent(player, {
+  type: 'inventory',
+  capacity: 16,
+  items: [
+    { id: 'start_potion', name: 'Health Potion', assetId: 'item_potion_red', kind: 'passive' },
+    { id: 'start_key', name: 'Old Key', assetId: 'item_key', kind: 'passive' },
+    ...new Array(14).fill(null),
+  ],
+})
 
 // Enemy skeleton
 const skeleton = world.createEntity('enemy_skeleton')
@@ -107,25 +167,78 @@ world.addComponent(skeleton, {
 })
 world.addComponent(skeleton, { type: 'facing', direction: 'left' })
 
-input.setPlayer(player)
-renderer.setFollowTarget(player)
+// input.setPlayer and renderer.setFollowTarget handled by switchControlTo below
 
 // ---------- UI Setup ----------
+
+// Toolbar (top bar with New/Save/Load/Export/Settings)
+const toolbar = new Toolbar(toolbarEl, world)
+
+// Settings panel (modal)
+const settingsPanel = new SettingsPanel()
+
+// Backpack panel (modal)
+const backpackPanel = new BackpackPanel(world)
+
+// Help overlay (? key)
+const helpOverlay = new HelpOverlay()
+
+// Pause menu (Escape in play mode)
+const pauseMenu = new PauseMenu()
 
 // Canvas interaction (build/play mode, drag, pan, zoom)
 const interaction = new CanvasInteraction(canvas, world, renderer)
 
+// Right-click context menu
+const contextMenu = new ContextMenu(world, renderer)
+interaction.setContextMenu(contextMenu)
+
+// Pixel editor (modal)
+const pixelEditor = new PixelEditor()
+
 // Asset browser (left panel top)
 const assetBrowser = new AssetBrowser(leftAssetBrowser)
 
-// Chat panel (left panel bottom)
-const chatPanel = new ChatPanel(leftChatPanel)
+// Chat panel (canvas overlay, bottom-left)
+const chatPanel = new ChatPanel(canvasContainer)
 
 // Context panel (right panel)
 const contextPanel = new ContextPanel(rightPanel, world)
 
 // Mode toggle (overlay on canvas)
 const modeToggle = new ModeToggle(canvasContainer)
+
+// ---------- Wire Toolbar Callbacks ----------
+
+toolbar.onSettings = () => settingsPanel.toggle()
+toolbar.onChat = () => chatPanel.toggle()
+toolbar.onBackpack = () => backpackPanel.toggle()
+
+settingsPanel.onPhysicsChange = (gravity) => {
+  physics.setGravity(gravity)
+}
+
+settingsPanel.onPlayerChange = (walkSpeed, jumpVelocity) => {
+  input.setWalkSpeed(walkSpeed)
+  input.setJumpVelocity(jumpVelocity)
+}
+
+backpackPanel.onConfigChange = () => {
+  physics.setGravity(GAME_CONFIG.physics.gravity)
+  input.setWalkSpeed(GAME_CONFIG.player.walkSpeed)
+  input.setJumpVelocity(GAME_CONFIG.player.jumpVelocity)
+}
+
+// ---------- Wire Pause Menu ----------
+
+pauseMenu.onResume = () => {
+  loop.start()
+}
+
+pauseMenu.onBackToBuild = () => {
+  interaction.setMode('build')
+  loop.start()
+}
 
 // ---------- Wire Callbacks ----------
 
@@ -134,11 +247,64 @@ interaction.onEntitySelected = (id) => {
   contextPanel.showEntity(id)
 }
 
+// Context panel "Open Backpack" -> open backpack panel
+contextPanel.onOpenBackpack = () => backpackPanel.open()
+
 // Context panel entity deletion -> deselect in interaction
 contextPanel.onEntityDeleted = (_id) => {
   interaction.selectedEntityId = null
   renderer.setSelectedEntity(null)
 }
+
+// Context menu callbacks
+contextMenu.onEntityDeleted = (_id) => {
+  interaction.selectedEntityId = null
+  renderer.setSelectedEntity(null)
+  contextPanel.showEntity(null)
+}
+
+contextMenu.onEntityDuplicated = (newId) => {
+  interaction.selectedEntityId = newId
+  renderer.setSelectedEntity(newId)
+  contextPanel.showEntity(newId)
+}
+
+contextMenu.onEntityChanged = (id) => {
+  contextPanel.showEntity(id)
+}
+
+// ---------- Click-to-Control ----------
+
+let controlledEntityId = player
+
+function switchControlTo(entityId: string): void {
+  const entity = world.getEntity(entityId)
+  if (!entity) return
+  controlledEntityId = entityId
+  input.setPlayer(entityId)
+  renderer.setFollowTarget(entityId)
+  renderer.controlledEntityId = entityId
+  interaction.controlledEntityId = entityId
+  doorSystem.controlledEntityId = entityId
+  backpackPanel.setEntity(entityId)
+
+  // Determine game mode from entity's layer
+  const layerComp = entity.components.get('layer') as import('./ecs/types').LayerComponent | undefined
+  const layerId = layerComp?.layerId ?? 'default'
+  const mode = world.layerManager.getGameModeForLayer(layerId)
+  input.setGameMode(mode)
+
+  // Toggle gravity based on game mode
+  const phys = entity.components.get('physics') as import('./ecs/types').PhysicsComponent | undefined
+  if (phys && mode === 'topdown') {
+    phys.gravity = false
+  }
+}
+
+// Initialize control
+switchControlTo(player)
+backpackPanel.setEntity(player)
+interaction.setOnControlSwitch(switchControlTo)
 
 // Mode changes -> toggle, renderer, input system
 interaction.onModeChange = (mode) => {
@@ -146,9 +312,13 @@ interaction.onModeChange = (mode) => {
   renderer.setMode(mode)
   input.setEnabled(mode === 'play')
   if (mode === 'play') {
-    renderer.setFollowTarget(player)
+    renderer.setFollowTarget(controlledEntityId)
   } else {
     renderer.setFollowTarget(null)
+    // Close pause menu when switching to build mode
+    if (pauseMenu.isOpen) {
+      pauseMenu.close()
+    }
   }
 }
 
@@ -174,6 +344,49 @@ assetBrowser.onSpawn = (assetId, x, y) => {
   world.addComponent(id, { type: 'position', x, y })
   world.addComponent(id, { type: 'sprite', assetId, width: sprite.width, height: sprite.height })
 }
+
+// Pixel editor: create sprite -> register + refresh asset browser
+assetBrowser.onCreateSprite = () => pixelEditor.open()
+pixelEditor.onSave = (assetId, _sprite, offscreenCanvas) => {
+  renderer.registerSprite(assetId, offscreenCanvas)
+  assetBrowser.refresh()
+}
+
+// ---------- Global Keyboard Shortcuts ----------
+
+window.addEventListener('keydown', (e) => {
+  const tag = (e.target as HTMLElement)?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+  // ? key -> help overlay
+  if (e.key === '?') {
+    e.preventDefault()
+    helpOverlay.toggle()
+    return
+  }
+
+  // T key -> toggle chat panel
+  if (e.key === 't' || e.key === 'T') {
+    e.preventDefault()
+    chatPanel.toggle()
+    return
+  }
+
+  // B or I key -> toggle backpack
+  if (e.key === 'b' || e.key === 'B' || e.key === 'i' || e.key === 'I') {
+    e.preventDefault()
+    backpackPanel.toggle()
+    return
+  }
+
+  // Escape in play mode -> pause menu
+  if (e.code === 'Escape' && interaction.mode === 'play' && !pauseMenu.isOpen) {
+    e.preventDefault()
+    pauseMenu.open()
+    loop.stop()
+    return
+  }
+})
 
 // ---------- Mistral AI Integration ----------
 const mistralClient = new MistralClient()
@@ -202,6 +415,7 @@ chatPanel.onMicPress = async () => {
 
 chatPanel.onSend = async (text) => {
   chatPanel.addMessage('assistant', 'Thinking...')
+  toolbar.setConnectionStatus('processing')
 
   // Check if this is a critique (AI already generated, player is adjusting)
   const isCritique = traceCapture.hasActiveSnapshot()
@@ -252,6 +466,7 @@ chatPanel.onSend = async (text) => {
 
     // Remove the "Thinking..." message and show the final response
     removeLastAssistantMessage()
+    toolbar.setConnectionStatus('connected')
     if (response.textContent) {
       chatPanel.addMessage('assistant', response.textContent)
       voiceService.speak(response.textContent)
@@ -261,6 +476,7 @@ chatPanel.onSend = async (text) => {
     }
   } catch (err: unknown) {
     removeLastAssistantMessage()
+    toolbar.setConnectionStatus('disconnected')
     const message = err instanceof Error ? err.message : String(err)
     chatPanel.addMessage('assistant', `Error: ${message}`)
   }
@@ -268,7 +484,7 @@ chatPanel.onSend = async (text) => {
 
 /** Remove the last assistant message (used to clear "Thinking..." indicator). */
 function removeLastAssistantMessage(): void {
-  const messages = document.querySelectorAll('.chat-msg-assistant')
+  const messages = document.querySelectorAll('.chat-overlay-msg-assistant')
   const last = messages[messages.length - 1]
   if (last) last.remove()
 }
@@ -290,6 +506,19 @@ modeToggle.onLooksGood(async () => {
 input.setEnabled(false)
 renderer.setMode('build')
 
+// ---------- Health Check ----------
+
+async function checkServerHealth() {
+  try {
+    const res = await fetch('/api/health')
+    toolbar.setConnectionStatus(res.ok ? 'connected' : 'disconnected')
+  } catch {
+    toolbar.setConnectionStatus('disconnected')
+  }
+}
+checkServerHealth()
+setInterval(checkServerHealth, 30_000)
+
 // ---------- Game Loop ----------
 
 const loop = new GameLoop(
@@ -303,7 +532,13 @@ const loop = new GameLoop(
     behaviorSystem.update(world, dt, overlaps)
     combatSystem.update(world, dt, overlaps)
     doorSystem.update(world, dt, overlaps)
+    world.layerManager.updateTransition(dt)
+    if (world.layerManager.transition.active) {
+      renderer.setTransitionProgress(world.layerManager.transition.progress / world.layerManager.transition.duration)
+    } else {
+      renderer.setTransitionProgress(0)
+    }
   },
-  () => renderer.render(world, 'default'),
+  (dt) => renderer.render(world, world.layerManager.currentLayerId, dt),
 )
 loop.start()
