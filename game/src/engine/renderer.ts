@@ -1,6 +1,7 @@
 import { World } from '../ecs/world'
 import type { Entity, PositionComponent, SpriteComponent, HealthComponent } from '../ecs/types'
 import { SPRITE_REGISTRY } from '../assets/sprites'
+import { Background } from './background'
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D
@@ -11,12 +12,14 @@ export class Renderer {
   private followTarget: string | null = null
   // Selection
   selectedEntityId: string | null = null
+  controlledEntityId: string | null = null
   // Mode
   private mode: 'play' | 'build' = 'build'
   private showGrid = true
   private gridSize = 32
   // Sprite cache (pre-rendered offscreen canvases for each sprite)
   private spriteCache = new Map<string, HTMLCanvasElement>()
+  private background = new Background()
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!
@@ -28,6 +31,14 @@ export class Renderer {
   setFollowTarget(entityId: string | null): void { this.followTarget = entityId }
   setSelectedEntity(id: string | null): void { this.selectedEntityId = id }
   toggleGrid(): void { this.showGrid = !this.showGrid }
+
+  getSpriteCanvas(assetId: string): HTMLCanvasElement | undefined {
+    return this.spriteCache.get(assetId)
+  }
+
+  registerSprite(assetId: string, canvas: HTMLCanvasElement): void {
+    this.spriteCache.set(assetId, canvas)
+  }
 
   /** Pre-render all sprites to offscreen canvases for fast blitting */
   private preRenderSprites(): void {
@@ -75,7 +86,7 @@ export class Renderer {
     }
   }
 
-  render(world: World, activeLayer: string): void {
+  render(world: World, activeLayer: string, dt: number = 0): void {
     const ctx = this.ctx
     const w = this.canvas.width
     const h = this.canvas.height
@@ -95,13 +106,15 @@ export class Renderer {
       }
     }
 
-    // Clear
-    ctx.fillStyle = '#1A1720'
-    ctx.fillRect(0, 0, w, h)
+    // Sky + clouds (screen-space, before camera transform)
+    this.background.renderScreenSpace(ctx, w, h, dt, this.cameraX, this.cameraY)
 
     ctx.save()
     ctx.scale(this.zoom, this.zoom)
     ctx.translate(-this.cameraX, -this.cameraY)
+
+    // Animated grass (world-space, after camera transform, before entities)
+    this.background.renderWorldSpace(ctx, dt, this.cameraX, this.cameraY, w, h, this.zoom)
 
     // Grid (build mode only)
     if (this.mode === 'build' && this.showGrid) {
@@ -122,6 +135,21 @@ export class Renderer {
     }
 
     ctx.restore()
+
+    // Layer transition overlay (skew animation)
+    if (this._transitionProgress > 0 && this._transitionProgress < 1) {
+      const t = this._transitionProgress
+      // Fade to white at midpoint, then fade back
+      const alpha = t < 0.5 ? t * 2 : (1 - t) * 2
+      ctx.fillStyle = `rgba(253, 246, 240, ${alpha * 0.7})`
+      ctx.fillRect(0, 0, w, h)
+    }
+  }
+
+  private _transitionProgress = 0
+
+  setTransitionProgress(p: number): void {
+    this._transitionProgress = p
   }
 
   private drawEntity(ctx: CanvasRenderingContext2D, entity: Entity, activeLayer: string): void {
@@ -136,8 +164,10 @@ export class Renderer {
       ctx.globalAlpha = 0.3
     }
 
-    // Get cached sprite canvas
-    const cachedSprite = this.spriteCache.get(sprite.assetId)
+    // Get cached sprite canvas (with optional hue shift)
+    const cachedSprite = sprite.hueShift
+      ? this.getHueShiftedSprite(sprite.assetId, sprite.hueShift)
+      : this.spriteCache.get(sprite.assetId)
 
     ctx.save()
 
@@ -188,6 +218,20 @@ export class Renderer {
         ctx.fillRect(cx, cy, handleSize, handleSize)
       }
     }
+
+    // Controlled entity indicator (play mode — green triangle above)
+    if (this.mode === 'play' && entity.id === this.controlledEntityId) {
+      const triSize = 6 / this.zoom
+      const triX = pos.x + sprite.width / 2
+      const triY = pos.y - 10
+      ctx.fillStyle = '#48BB78'
+      ctx.beginPath()
+      ctx.moveTo(triX, triY - triSize)
+      ctx.lineTo(triX - triSize, triY + triSize)
+      ctx.lineTo(triX + triSize, triY + triSize)
+      ctx.closePath()
+      ctx.fill()
+    }
   }
 
   private drawFallbackRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, name: string): void {
@@ -215,9 +259,93 @@ export class Renderer {
     ctx.fillRect(x, y, barWidth * ratio, barHeight)
   }
 
+  /** Get a hue-shifted version of a sprite, using cache to avoid recomputing */
+  private getHueShiftedSprite(assetId: string, hueShift: number): HTMLCanvasElement | undefined {
+    const cacheKey = `${assetId}_hue${Math.round(hueShift)}`
+    const cached = this.spriteCache.get(cacheKey)
+    if (cached) return cached
+
+    const baseSprite = this.spriteCache.get(assetId)
+    if (!baseSprite) return undefined
+
+    const offscreen = document.createElement('canvas')
+    offscreen.width = baseSprite.width
+    offscreen.height = baseSprite.height
+    const ctx = offscreen.getContext('2d')!
+
+    ctx.drawImage(baseSprite, 0, 0)
+    const imageData = ctx.getImageData(0, 0, offscreen.width, offscreen.height)
+    const data = imageData.data
+    const hueOffset = hueShift / 360
+
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue // skip transparent pixels
+      const [h, s, l] = this.rgbToHsl(data[i], data[i + 1], data[i + 2])
+      const newH = (h + hueOffset) % 1
+      const [r, g, b] = this.hslToRgb(newH, s, l)
+      data[i] = r
+      data[i + 1] = g
+      data[i + 2] = b
+    }
+
+    ctx.putImageData(imageData, 0, 0)
+    this.spriteCache.set(cacheKey, offscreen)
+    return offscreen
+  }
+
+  /** Convert RGB (0-255) to HSL (0-1) */
+  private rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+    r /= 255
+    g /= 255
+    b /= 255
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+    const l = (max + min) / 2
+    let h = 0
+    let s = 0
+
+    if (max !== min) {
+      const d = max - min
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break
+        case g: h = ((b - r) / d + 2) / 6; break
+        case b: h = ((r - g) / d + 4) / 6; break
+      }
+    }
+
+    return [h, s, l]
+  }
+
+  /** Convert HSL (0-1) to RGB (0-255) */
+  private hslToRgb(h: number, s: number, l: number): [number, number, number] {
+    if (s === 0) {
+      const v = Math.round(l * 255)
+      return [v, v, v]
+    }
+
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+    const p = 2 * l - q
+
+    const hue2rgb = (t: number): number => {
+      if (t < 0) t += 1
+      if (t > 1) t -= 1
+      if (t < 1 / 6) return p + (q - p) * 6 * t
+      if (t < 1 / 2) return q
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
+      return p
+    }
+
+    return [
+      Math.round(hue2rgb(h + 1 / 3) * 255),
+      Math.round(hue2rgb(h) * 255),
+      Math.round(hue2rgb(h - 1 / 3) * 255),
+    ]
+  }
+
   private drawGrid(canvasW: number, canvasH: number): void {
     const ctx = this.ctx
-    ctx.strokeStyle = 'rgba(224, 216, 208, 0.1)'
+    ctx.strokeStyle = 'rgba(43, 36, 64, 0.12)'
     ctx.lineWidth = 0.5 / this.zoom
 
     const startX = Math.floor(this.cameraX / this.gridSize) * this.gridSize
