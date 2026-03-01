@@ -2,6 +2,7 @@ import { World } from '../ecs/world'
 import type { Entity, PositionComponent, SpriteComponent, HealthComponent } from '../ecs/types'
 import { SPRITE_REGISTRY } from '../assets/sprites'
 import { Background } from './background'
+import type { VFXSystem, SpeechBubble } from '../systems/vfx'
 
 export class Renderer {
   private ctx: CanvasRenderingContext2D
@@ -20,6 +21,7 @@ export class Renderer {
   // Sprite cache (pre-rendered offscreen canvases for each sprite)
   private spriteCache = new Map<string, HTMLCanvasElement>()
   private background = new Background()
+  private vfx: VFXSystem | null = null
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext('2d')!
@@ -28,6 +30,7 @@ export class Renderer {
   }
 
   setMode(mode: 'play' | 'build'): void { this.mode = mode }
+  setVFX(vfx: VFXSystem): void { this.vfx = vfx }
   setFollowTarget(entityId: string | null): void { this.followTarget = entityId }
   setSelectedEntity(id: string | null): void { this.selectedEntityId = id }
   toggleGrid(): void { this.showGrid = !this.showGrid }
@@ -134,7 +137,17 @@ export class Renderer {
       this.drawEntity(ctx, entity, activeLayer)
     }
 
+    // VFX: world-space effects (slash arcs, floating texts, pickup prompts, speech bubbles)
+    if (this.vfx && this.mode === 'play') {
+      this.drawWorldVFX(ctx, world)
+    }
+
     ctx.restore()
+
+    // VFX: screen-space HUD (item toasts)
+    if (this.vfx && this.mode === 'play') {
+      this.drawScreenVFX(ctx, w, h)
+    }
 
     // Layer transition overlay (skew animation)
     if (this._transitionProgress > 0 && this._transitionProgress < 1) {
@@ -162,6 +175,14 @@ export class Renderer {
     const entityLayer = layerComp ? (layerComp as { layerId: string }).layerId : 'default'
     if (entityLayer !== activeLayer) {
       ctx.globalAlpha = 0.3
+    }
+
+    // Invulnerability flash: skip rendering every other 100ms to create blink
+    if (this.vfx && this.vfx.isFlashing(entity.id)) {
+      if (Math.floor(Date.now() / 80) % 2 === 0) {
+        ctx.globalAlpha = 1
+        return
+      }
     }
 
     // Get cached sprite canvas (with optional hue shift)
@@ -341,6 +362,189 @@ export class Renderer {
       Math.round(hue2rgb(h) * 255),
       Math.round(hue2rgb(h - 1 / 3) * 255),
     ]
+  }
+
+  private drawWorldVFX(ctx: CanvasRenderingContext2D, world: World): void {
+    if (!this.vfx) return
+
+    // Slash arcs
+    for (const arc of this.vfx.slashArcs) {
+      const progress = arc.age / arc.lifetime
+      const alpha = 1 - progress
+      ctx.save()
+      ctx.globalAlpha = alpha * 0.8
+      ctx.strokeStyle = arc.color
+      ctx.lineWidth = 3 - progress * 2
+      ctx.lineCap = 'round'
+      // Animate the sweep
+      const sweepProgress = Math.min(progress * 2, 1)
+      const currentEnd = arc.startAngle + (arc.endAngle - arc.startAngle) * sweepProgress
+      ctx.beginPath()
+      ctx.arc(arc.x, arc.y, arc.radius * (0.5 + progress * 0.5), arc.startAngle, currentEnd)
+      ctx.stroke()
+      // Inner arc
+      ctx.globalAlpha = alpha * 0.4
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.arc(arc.x, arc.y, arc.radius * (0.3 + progress * 0.3), arc.startAngle, currentEnd)
+      ctx.stroke()
+      ctx.restore()
+    }
+
+    // Floating texts (damage/heal numbers)
+    for (const ft of this.vfx.floatingTexts) {
+      const progress = ft.age / ft.lifetime
+      const alpha = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3
+      ctx.save()
+      ctx.globalAlpha = alpha
+      ctx.font = `bold ${ft.fontSize}px "IBM Plex Mono"`
+      ctx.textAlign = 'center'
+      // Outline for readability
+      ctx.strokeStyle = '#2B2440'
+      ctx.lineWidth = 3
+      ctx.strokeText(ft.text, ft.x, ft.y)
+      ctx.fillStyle = ft.color
+      ctx.fillText(ft.text, ft.x, ft.y)
+      ctx.restore()
+    }
+
+    // Pickup prompts ("Press F")
+    for (const prompt of this.vfx.pickupPrompts) {
+      const bobY = Math.sin(Date.now() / 300) * 2
+      const py = prompt.y - 14 + bobY
+      ctx.save()
+      ctx.globalAlpha = 0.9
+      // Background pill
+      ctx.font = 'bold 8px "IBM Plex Mono"'
+      const text = '[F] Pick up'
+      const metrics = ctx.measureText(text)
+      const pw = metrics.width + 8
+      const ph = 12
+      const px = prompt.x + prompt.width / 2 - pw / 2
+      ctx.fillStyle = 'rgba(43, 36, 64, 0.85)'
+      ctx.beginPath()
+      ctx.roundRect(px, py - ph + 2, pw, ph, 3)
+      ctx.fill()
+      // Text
+      ctx.fillStyle = '#FDF6F0'
+      ctx.textAlign = 'center'
+      ctx.fillText(text, prompt.x + prompt.width / 2, py)
+      ctx.restore()
+    }
+
+    // Speech bubbles
+    for (const bubble of this.vfx.speechBubbles) {
+      this.drawSpeechBubble(ctx, bubble, world)
+    }
+  }
+
+  private drawSpeechBubble(ctx: CanvasRenderingContext2D, bubble: SpeechBubble, world: World): void {
+    const entity = world.getEntity(bubble.entityId)
+    if (!entity) return
+    const pos = entity.components.get('position') as PositionComponent | undefined
+    const sprite = entity.components.get('sprite') as SpriteComponent | undefined
+    if (!pos || !sprite) return
+
+    const progress = bubble.age / bubble.lifetime
+    // Fade out during last 20% of lifetime
+    const alpha = progress > 0.8 ? 1 - (progress - 0.8) / 0.2 : 1
+
+    ctx.save()
+    ctx.globalAlpha = alpha
+
+    // Word wrap
+    const maxWidth = 120
+    const fontSize = 9
+    const lineHeight = fontSize + 3
+    ctx.font = `${fontSize}px "IBM Plex Mono"`
+    const words = bubble.text.split(' ')
+    const lines: string[] = []
+    let currentLine = ''
+    for (const word of words) {
+      const test = currentLine ? `${currentLine} ${word}` : word
+      if (ctx.measureText(test).width > maxWidth) {
+        if (currentLine) lines.push(currentLine)
+        currentLine = word
+      } else {
+        currentLine = test
+      }
+    }
+    if (currentLine) lines.push(currentLine)
+
+    // Measure bubble dimensions
+    let bubbleWidth = 0
+    for (const line of lines) {
+      bubbleWidth = Math.max(bubbleWidth, ctx.measureText(line).width)
+    }
+    const padH = 8
+    const padV = 6
+    bubbleWidth += padH * 2
+    const bubbleHeight = lines.length * lineHeight + padV * 2
+    const tailHeight = 6
+
+    // Position bubble above entity, centered
+    const bx = pos.x + sprite.width / 2 - bubbleWidth / 2
+    const by = pos.y - bubbleHeight - tailHeight - 4
+
+    // Background rounded rect
+    ctx.fillStyle = 'rgba(43, 36, 64, 0.9)'
+    ctx.beginPath()
+    ctx.roundRect(bx, by, bubbleWidth, bubbleHeight, 4)
+    ctx.fill()
+
+    // Tail triangle pointing down to entity
+    const tailX = pos.x + sprite.width / 2
+    ctx.beginPath()
+    ctx.moveTo(tailX - 4, by + bubbleHeight)
+    ctx.lineTo(tailX, by + bubbleHeight + tailHeight)
+    ctx.lineTo(tailX + 4, by + bubbleHeight)
+    ctx.closePath()
+    ctx.fill()
+
+    // Text
+    ctx.fillStyle = '#FDF6F0'
+    ctx.textAlign = 'left'
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], bx + padH, by + padV + fontSize + i * lineHeight)
+    }
+
+    ctx.restore()
+  }
+
+  private drawScreenVFX(ctx: CanvasRenderingContext2D, w: number, h: number): void {
+    if (!this.vfx) return
+
+    // Item toasts (bottom center of screen)
+    const toasts = this.vfx.itemToasts
+    for (let i = 0; i < toasts.length; i++) {
+      const toast = toasts[i]
+      const progress = toast.age / toast.lifetime
+      // Slide up and fade out
+      const alpha = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3
+      const slideY = progress < 0.1 ? (1 - progress / 0.1) * 20 : 0
+
+      ctx.save()
+      ctx.globalAlpha = alpha
+      ctx.font = '12px "IBM Plex Mono"'
+      ctx.textAlign = 'center'
+      const text = toast.text
+      const metrics = ctx.measureText(text)
+      const tx = w / 2
+      const ty = h - 60 - i * 24 + slideY
+
+      // Background pill
+      ctx.fillStyle = 'rgba(43, 36, 64, 0.85)'
+      const pillW = metrics.width + 16
+      const pillH = 20
+      ctx.beginPath()
+      ctx.roundRect(tx - pillW / 2, ty - pillH + 4, pillW, pillH, 4)
+      ctx.fill()
+
+      // Text
+      ctx.fillStyle = '#4CAF50'
+      ctx.fillText(text, tx, ty)
+      ctx.restore()
+    }
   }
 
   private drawGrid(canvasW: number, canvasH: number): void {

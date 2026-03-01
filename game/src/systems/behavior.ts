@@ -15,10 +15,27 @@ interface BehaviorContext {
 
 export class BehaviorSystem {
   private intervalTimers = new Map<string, number>()
+  private voiceCooldowns = new Map<string, number>()
+  private onSayVoiceCallback: ((entityId: string, npcType: string) => void) | null = null
 
   constructor(private healthSystem: HealthSystem) {}
 
+  setOnSayVoice(callback: (entityId: string, npcType: string) => void): void {
+    this.onSayVoiceCallback = callback
+  }
+
+  setVoiceCooldown(entityId: string, ms: number): void {
+    this.voiceCooldowns.set(entityId, ms)
+  }
+
   update(world: World, dt: number, overlaps: Collision[]): void {
+    // Tick down voice cooldowns
+    for (const [key, remaining] of this.voiceCooldowns) {
+      const next = remaining - dt
+      if (next <= 0) this.voiceCooldowns.delete(key)
+      else this.voiceCooldowns.set(key, next)
+    }
+
     for (const entity of world.query('behavior')) {
       const behavior = entity.components.get('behavior') as BehaviorComponent
       const ctx: BehaviorContext = { entity, world, overlaps, dt }
@@ -146,6 +163,14 @@ export class BehaviorSystem {
         const text = parts.slice(1).join(' ')
         // Store on entity for renderer to pick up
         ;(ctx.entity as any)._speechBubble = { text, timer: 3000 }
+        break
+      }
+      case 'say_voice': {
+        const npcType = parts[1] || ''
+        if (this.voiceCooldowns.has(ctx.entity.id)) break
+        if (this.onSayVoiceCallback) {
+          this.onSayVoiceCallback(ctx.entity.id, npcType)
+        }
         break
       }
       case 'destroy': {

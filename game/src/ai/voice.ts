@@ -3,6 +3,8 @@
 export class VoiceService {
   private recognition: any = null
   private audioContext: AudioContext | null = null
+  private audioCache = new Map<string, AudioBuffer>()
+  private currentSource: AudioBufferSourceNode | null = null
 
   constructor() {
     const SpeechRecognitionCtor =
@@ -17,6 +19,10 @@ export class VoiceService {
 
   get isSupported(): boolean {
     return this.recognition !== null
+  }
+
+  get isSpeaking(): boolean {
+    return this.currentSource !== null
   }
 
   async startListening(): Promise<string> {
@@ -36,25 +42,41 @@ export class VoiceService {
     this.recognition?.stop()
   }
 
-  async speak(text: string): Promise<void> {
+  async speak(text: string, voiceId?: string): Promise<void> {
     try {
-      const res = await fetch('/api/voice/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      })
+      if (!this.audioContext) this.audioContext = new AudioContext()
 
-      if (!res.ok) {
-        console.warn('TTS failed, falling back to silent')
-        return
+      // Check cache first
+      const cacheKey = `${voiceId ?? 'default'}:${text}`
+      let audioBuffer = this.audioCache.get(cacheKey)
+
+      if (!audioBuffer) {
+        const body: Record<string, string> = { text }
+        if (voiceId) body.voiceId = voiceId
+
+        const res = await fetch('/api/voice/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+
+        if (!res.ok) {
+          console.warn('TTS failed, falling back to silent')
+          return
+        }
+
+        const arrayBuffer = await res.arrayBuffer()
+        audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
+        this.audioCache.set(cacheKey, audioBuffer)
       }
 
-      const arrayBuffer = await res.arrayBuffer()
-      if (!this.audioContext) this.audioContext = new AudioContext()
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer)
       const source = this.audioContext.createBufferSource()
       source.buffer = audioBuffer
       source.connect(this.audioContext.destination)
+      source.onended = () => {
+        if (this.currentSource === source) this.currentSource = null
+      }
+      this.currentSource = source
       source.start()
     } catch {
       console.warn('TTS unavailable')

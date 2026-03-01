@@ -510,14 +510,15 @@ chatPanel.onSend = async (text) => {
 
   // Check if this is a critique (AI already generated, player is adjusting)
   const isCritique = traceCapture.hasActiveSnapshot()
-  if (isCritique) {
-    traceCapture.addCritique(text)
-  }
+
+  // Update canvas size for trace context
+  traceCapture.setCanvasSize(canvas.width, canvas.height)
 
   try {
     // Save a snapshot before AI modifies the world (for undo)
     world.saveSnapshot()
     const allToolCalls: any[] = []
+    const startTime = performance.now()
 
     let response = await mistralClient.send(text, world)
 
@@ -550,17 +551,27 @@ chatPanel.onSend = async (text) => {
       response = await mistralClient.sendToolResults(results)
     }
 
-    // If this was a fresh prompt (not a critique), capture the AI's output as snapshot A
-    if (!isCritique) {
-      // Synthesize cognitive data from model response
-      const cognitive: import('./telemetry/types').CognitiveData = {}
-      if (response.textContent) {
-        cognitive.thinking = response.textContent
-      }
-      if (allToolCalls.length > 0) {
-        cognitive.plan = allToolCalls.map(tc => tc.function.name).join(' → ')
-        cognitive.decisionRationale = `${allToolCalls.length} tool calls for: ${text.slice(0, 100)}`
-      }
+    const elapsed = Math.round(performance.now() - startTime)
+    traceCapture.setResponseTime(elapsed)
+
+    // Wire model routing info into trace capture
+    traceCapture.setModelInfo(response.modelId, response.routingDecision)
+
+    // Build cognitive data from model response
+    const cognitive: import('./telemetry/types').CognitiveData = {}
+    if (response.textContent) {
+      cognitive.thinking = response.textContent
+    }
+    if (allToolCalls.length > 0) {
+      cognitive.plan = allToolCalls.map(tc => tc.function.name).join(' → ')
+      cognitive.decisionRationale = `${allToolCalls.length} tool calls for: ${text.slice(0, 100)}`
+    }
+
+    if (isCritique) {
+      // Critique round: record the critique text + cognitive data from this correction
+      traceCapture.addCritique(text, cognitive)
+    } else {
+      // Fresh prompt: capture the AI's output as snapshot A
       traceCapture.captureAISnapshot(world, text, allToolCalls, cognitive)
     }
 
