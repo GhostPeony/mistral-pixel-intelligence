@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Q-Bit and Build</title>
+  </head>
+  <body>
+    <div id="landing">
+      <!-- Hero Section -->
+      <section id="hero">
+        <h1 class="hero-title">Q-Bit and Build</h1>
+        <p class="hero-tagline">Create worlds with AI. One pixel at a time.</p>
+        <div id="sprite-showcase"></div>
+        <button id="play-btn" class="cta-btn" disabled>Select a Character to Play</button>
+      </section>
+
+      <!-- Features Section -->
+      <section id="features">
+        <div class="section-tag">FEATURES</div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-tag">AI</div>
+            <h3>AI Level Generation</h3>
+            <p>Describe a world and watch it build itself. Powered by Mistral tool-calling.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-tag">CREATE</div>
+            <h3>Pixel Art Editor</h3>
+            <p>Draw your own sprites, characters, and items. Every pixel is yours.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-tag">TRAIN</div>
+            <h3>Train Your Model</h3>
+            <p>Capture traces, build datasets, fine-tune with DPO. Make the AI yours.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Character Select Section -->
+      <section id="characters">
+        <div class="section-tag">YOUR CHARACTERS</div>
+        <div id="character-grid"></div>
+      </section>
+
+      <!-- Footer -->
+      <footer id="landing-footer">
+        <p>Q-Bit and Build &mdash; Built with Mistral AI</p>
+      </footer>
+    </div>
+    <script type="module" src="/src/landing.ts"></script>
+  </body>
+</html>
