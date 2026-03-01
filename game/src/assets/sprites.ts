@@ -1877,6 +1877,1041 @@ const item_coin: SpriteData = (() => {
   return { width: 24, height: 24, pixels }
 })()
 
+// --- Consumable Items ---
+
+const item_potion_green: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const GP = '#4CAF50', GK = '#388E3C', CK = '#8B5A2B'
+  // Cork
+  for (let y2 = 3; y2 < 6; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = CK
+  // Neck
+  for (let y2 = 6; y2 < 10; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = ST
+  // Body
+  for (let y2 = 10; y2 < 21; y2++) {
+    const half = y2 < 13 ? 2 + (y2 - 10) * 2 : 8
+    for (let dx = -half; dx <= half; dx++) {
+      const x = 12 + dx
+      if (x >= 0 && x < 24) {
+        if (Math.abs(dx) === half) pixels[y2][x] = ST
+        else pixels[y2][x] = GP
+      }
+    }
+  }
+  for (let x = 4; x < 20; x++) pixels[21][x] = ST
+  // Highlight
+  pixels[13][8] = '#81C784'
+  pixels[14][8] = '#81C784'
+  // Dark accent
+  pixels[16][15] = GK
+  pixels[17][15] = GK
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_potion_purple: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const PP = '#9C27B0', PK = '#7B2D8B', CK = '#8B5A2B'
+  // Cork
+  for (let y2 = 3; y2 < 6; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = CK
+  // Neck
+  for (let y2 = 6; y2 < 10; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = ST
+  // Body
+  for (let y2 = 10; y2 < 21; y2++) {
+    const half = y2 < 13 ? 2 + (y2 - 10) * 2 : 8
+    for (let dx = -half; dx <= half; dx++) {
+      const x = 12 + dx
+      if (x >= 0 && x < 24) {
+        if (Math.abs(dx) === half) pixels[y2][x] = ST
+        else pixels[y2][x] = PP
+      }
+    }
+  }
+  for (let x = 4; x < 20; x++) pixels[21][x] = ST
+  pixels[13][8] = '#CE93D8'
+  pixels[14][8] = '#CE93D8'
+  pixels[16][15] = PK
+  pixels[17][15] = PK
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_potion_yellow: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const YP = '#FFC107', YK = '#FFA000', CK = '#8B5A2B'
+  // Cork
+  for (let y2 = 3; y2 < 6; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = CK
+  // Neck
+  for (let y2 = 6; y2 < 10; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = ST
+  // Body
+  for (let y2 = 10; y2 < 21; y2++) {
+    const half = y2 < 13 ? 2 + (y2 - 10) * 2 : 8
+    for (let dx = -half; dx <= half; dx++) {
+      const x = 12 + dx
+      if (x >= 0 && x < 24) {
+        if (Math.abs(dx) === half) pixels[y2][x] = ST
+        else pixels[y2][x] = YP
+      }
+    }
+  }
+  for (let x = 4; x < 20; x++) pixels[21][x] = ST
+  pixels[13][8] = '#FFD54F'
+  pixels[14][8] = '#FFD54F'
+  pixels[16][15] = YK
+  pixels[17][15] = YK
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_potion_white: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const WP2 = '#EEEEEE', WK = '#E0E0E0', CK = '#8B5A2B'
+  // Cork
+  for (let y2 = 3; y2 < 6; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = CK
+  // Neck
+  for (let y2 = 6; y2 < 10; y2++) for (let x = 10; x < 14; x++) pixels[y2][x] = ST
+  // Body
+  for (let y2 = 10; y2 < 21; y2++) {
+    const half = y2 < 13 ? 2 + (y2 - 10) * 2 : 8
+    for (let dx = -half; dx <= half; dx++) {
+      const x = 12 + dx
+      if (x >= 0 && x < 24) {
+        if (Math.abs(dx) === half) pixels[y2][x] = ST
+        else pixels[y2][x] = WP2
+      }
+    }
+  }
+  for (let x = 4; x < 20; x++) pixels[21][x] = ST
+  pixels[13][8] = WH
+  pixels[14][8] = WH
+  pixels[16][15] = WK
+  pixels[17][15] = WK
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_heart: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const HR2 = '#E53935', HD2 = '#C62828', HL = '#EF9A9A'
+  // Heart shape: two bumps on top, point at bottom
+  const heartRows: [number, number][] = [
+    [5, 9], [3, 11], [2, 12], [1, 13], [1, 23], [1, 23],
+    [2, 22], [3, 21], [4, 20], [5, 19], [6, 18],
+    [7, 17], [8, 16], [9, 15], [10, 14], [11, 13]
+  ]
+  for (let i = 0; i < heartRows.length; i++) {
+    const y2 = 4 + i
+    const [left, right] = heartRows[i]
+    if (y2 >= 24) continue
+    for (let x = left; x < right && x < 24; x++) {
+      // Split into two lobes at top rows
+      if (i < 4 && x >= 11 && x <= 12) continue
+      if (Math.abs(x - 12) <= 1 && i >= 2 && i <= 3) continue
+      pixels[y2][x] = HR2
+    }
+  }
+  // Dark shading on right side
+  for (let y2 = 6; y2 < 18; y2++) {
+    for (let x = 14; x < 22; x++) {
+      if (pixels[y2][x] === HR2) pixels[y2][x] = HD2
+    }
+  }
+  // Highlight top-left
+  pixels[6][5] = HL; pixels[6][6] = HL
+  pixels[7][4] = HL; pixels[7][5] = HL
+  pixels[8][5] = HL
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_gem_red: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const GR2 = '#E53935', GD3 = '#C62828', GL2 = '#FFCDD2'
+  // Diamond/gem shape
+  const gemRows = [
+    { y: 4, left: 11, right: 13 },
+    { y: 5, left: 10, right: 14 },
+    { y: 6, left: 9, right: 15 },
+    { y: 7, left: 8, right: 16 },
+    { y: 8, left: 7, right: 17 },
+    { y: 9, left: 6, right: 18 },
+    { y: 10, left: 5, right: 19 },
+    { y: 11, left: 5, right: 19 },
+    { y: 12, left: 5, right: 19 },
+    { y: 13, left: 6, right: 18 },
+    { y: 14, left: 7, right: 17 },
+    { y: 15, left: 8, right: 16 },
+    { y: 16, left: 9, right: 15 },
+    { y: 17, left: 10, right: 14 },
+    { y: 18, left: 11, right: 13 },
+    { y: 19, left: 12, right: 13 },
+  ]
+  for (const { y: y2, left, right } of gemRows) {
+    for (let x = left; x < right; x++) {
+      if (x === left || x === right - 1) pixels[y2][x] = GD3
+      else pixels[y2][x] = GR2
+    }
+  }
+  // Facet line
+  for (let x = 6; x < 18; x++) if (pixels[10][x]) pixels[10][x] = GD3
+  // Sparkle
+  pixels[6][10] = GL2; pixels[7][9] = GL2; pixels[7][10] = GL2
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_gem_blue: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const GB = '#1E88E5', GBD = '#1565C0', GBL = '#BBDEFB'
+  const gemRows = [
+    { y: 4, left: 11, right: 13 },
+    { y: 5, left: 10, right: 14 },
+    { y: 6, left: 9, right: 15 },
+    { y: 7, left: 8, right: 16 },
+    { y: 8, left: 7, right: 17 },
+    { y: 9, left: 6, right: 18 },
+    { y: 10, left: 5, right: 19 },
+    { y: 11, left: 5, right: 19 },
+    { y: 12, left: 5, right: 19 },
+    { y: 13, left: 6, right: 18 },
+    { y: 14, left: 7, right: 17 },
+    { y: 15, left: 8, right: 16 },
+    { y: 16, left: 9, right: 15 },
+    { y: 17, left: 10, right: 14 },
+    { y: 18, left: 11, right: 13 },
+    { y: 19, left: 12, right: 13 },
+  ]
+  for (const { y: y2, left, right } of gemRows) {
+    for (let x = left; x < right; x++) {
+      if (x === left || x === right - 1) pixels[y2][x] = GBD
+      else pixels[y2][x] = GB
+    }
+  }
+  for (let x = 6; x < 18; x++) if (pixels[10][x]) pixels[10][x] = GBD
+  pixels[6][10] = GBL; pixels[7][9] = GBL; pixels[7][10] = GBL
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_gem_green: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const GG = '#4CAF50', GGD = '#388E3C', GGL = '#C8E6C9'
+  const gemRows = [
+    { y: 4, left: 11, right: 13 },
+    { y: 5, left: 10, right: 14 },
+    { y: 6, left: 9, right: 15 },
+    { y: 7, left: 8, right: 16 },
+    { y: 8, left: 7, right: 17 },
+    { y: 9, left: 6, right: 18 },
+    { y: 10, left: 5, right: 19 },
+    { y: 11, left: 5, right: 19 },
+    { y: 12, left: 5, right: 19 },
+    { y: 13, left: 6, right: 18 },
+    { y: 14, left: 7, right: 17 },
+    { y: 15, left: 8, right: 16 },
+    { y: 16, left: 9, right: 15 },
+    { y: 17, left: 10, right: 14 },
+    { y: 18, left: 11, right: 13 },
+    { y: 19, left: 12, right: 13 },
+  ]
+  for (const { y: y2, left, right } of gemRows) {
+    for (let x = left; x < right; x++) {
+      if (x === left || x === right - 1) pixels[y2][x] = GGD
+      else pixels[y2][x] = GG
+    }
+  }
+  for (let x = 6; x < 18; x++) if (pixels[10][x]) pixels[10][x] = GGD
+  pixels[6][10] = GGL; pixels[7][9] = GGL; pixels[7][10] = GGL
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_gem_purple: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const GPR = '#9C27B0', GPD = '#7B2D8B', GPL = '#E1BEE7'
+  const gemRows = [
+    { y: 4, left: 11, right: 13 },
+    { y: 5, left: 10, right: 14 },
+    { y: 6, left: 9, right: 15 },
+    { y: 7, left: 8, right: 16 },
+    { y: 8, left: 7, right: 17 },
+    { y: 9, left: 6, right: 18 },
+    { y: 10, left: 5, right: 19 },
+    { y: 11, left: 5, right: 19 },
+    { y: 12, left: 5, right: 19 },
+    { y: 13, left: 6, right: 18 },
+    { y: 14, left: 7, right: 17 },
+    { y: 15, left: 8, right: 16 },
+    { y: 16, left: 9, right: 15 },
+    { y: 17, left: 10, right: 14 },
+    { y: 18, left: 11, right: 13 },
+    { y: 19, left: 12, right: 13 },
+  ]
+  for (const { y: y2, left, right } of gemRows) {
+    for (let x = left; x < right; x++) {
+      if (x === left || x === right - 1) pixels[y2][x] = GPD
+      else pixels[y2][x] = GPR
+    }
+  }
+  for (let x = 6; x < 18; x++) if (pixels[10][x]) pixels[10][x] = GPD
+  pixels[6][10] = GPL; pixels[7][9] = GPL; pixels[7][10] = GPL
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_gem_white: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const GW = '#EEEEEE', GWD = '#BDBDBD', GWL = '#FFFFFF'
+  const gemRows = [
+    { y: 4, left: 11, right: 13 },
+    { y: 5, left: 10, right: 14 },
+    { y: 6, left: 9, right: 15 },
+    { y: 7, left: 8, right: 16 },
+    { y: 8, left: 7, right: 17 },
+    { y: 9, left: 6, right: 18 },
+    { y: 10, left: 5, right: 19 },
+    { y: 11, left: 5, right: 19 },
+    { y: 12, left: 5, right: 19 },
+    { y: 13, left: 6, right: 18 },
+    { y: 14, left: 7, right: 17 },
+    { y: 15, left: 8, right: 16 },
+    { y: 16, left: 9, right: 15 },
+    { y: 17, left: 10, right: 14 },
+    { y: 18, left: 11, right: 13 },
+    { y: 19, left: 12, right: 13 },
+  ]
+  for (const { y: y2, left, right } of gemRows) {
+    for (let x = left; x < right; x++) {
+      if (x === left || x === right - 1) pixels[y2][x] = GWD
+      else pixels[y2][x] = GW
+    }
+  }
+  for (let x = 6; x < 18; x++) if (pixels[10][x]) pixels[10][x] = GWD
+  pixels[6][10] = GWL; pixels[7][9] = GWL; pixels[7][10] = GWL
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_coin_gold: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const CG = '#FFD700', CD = '#DAA520'
+  for (let y2 = 5; y2 < 19; y2++) {
+    for (let x = 5; x < 19; x++) {
+      const dx = x - 12, dy = y2 - 12
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= 7) {
+        if (dist > 5.5) pixels[y2][x] = CD
+        else pixels[y2][x] = CG
+      }
+    }
+  }
+  // Embossed star center
+  pixels[10][12] = CD; pixels[11][11] = CD; pixels[11][12] = CD; pixels[11][13] = CD
+  pixels[12][10] = CD; pixels[12][11] = CD; pixels[12][12] = CD; pixels[12][13] = CD; pixels[12][14] = CD
+  pixels[13][11] = CD; pixels[13][12] = CD; pixels[13][13] = CD
+  pixels[14][12] = CD
+  // Highlight
+  pixels[7][9] = '#FFECB3'; pixels[7][10] = '#FFECB3'
+  pixels[8][9] = '#FFECB3'
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_coin_silver: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const CS = '#C0C0C0', CSD = '#999999'
+  for (let y2 = 5; y2 < 19; y2++) {
+    for (let x = 5; x < 19; x++) {
+      const dx = x - 12, dy = y2 - 12
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= 7) {
+        if (dist > 5.5) pixels[y2][x] = CSD
+        else pixels[y2][x] = CS
+      }
+    }
+  }
+  // Cross center
+  for (let y2 = 9; y2 < 15; y2++) pixels[y2][12] = CSD
+  for (let x = 9; x < 15; x++) pixels[12][x] = CSD
+  pixels[7][9] = '#E0E0E0'; pixels[7][10] = '#E0E0E0'
+  pixels[8][9] = '#E0E0E0'
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_coin_bronze: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const CB2 = '#CD7F32', CBD = '#A0522D'
+  for (let y2 = 5; y2 < 19; y2++) {
+    for (let x = 5; x < 19; x++) {
+      const dx = x - 12, dy = y2 - 12
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= 7) {
+        if (dist > 5.5) pixels[y2][x] = CBD
+        else pixels[y2][x] = CB2
+      }
+    }
+  }
+  // Simple dot center
+  pixels[11][12] = CBD; pixels[12][11] = CBD; pixels[12][12] = CBD; pixels[12][13] = CBD
+  pixels[13][12] = CBD
+  pixels[7][9] = '#D4A06A'; pixels[7][10] = '#D4A06A'
+  pixels[8][9] = '#D4A06A'
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_bone: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const BW2 = '#DDDDDD', BG2 = '#BBBBBB'
+  // Left knob (top-left)
+  for (let dy = -2; dy <= 1; dy++) {
+    for (let dx = -2; dx <= 1; dx++) {
+      const x = 5 + dx, y2 = 6 + dy
+      if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist <= 2) pixels[y2][x] = dist > 1.5 ? BG2 : BW2
+      }
+    }
+  }
+  // Right knob (bottom-right)
+  for (let dy = -1; dy <= 2; dy++) {
+    for (let dx = -1; dx <= 2; dx++) {
+      const x = 19 + dx, y2 = 18 + dy
+      if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist <= 2) pixels[y2][x] = dist > 1.5 ? BG2 : BW2
+      }
+    }
+  }
+  // Shaft (diagonal)
+  for (let i = 0; i < 14; i++) {
+    const x = 5 + i, y2 = 7 + i
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+      pixels[y2][x] = BW2
+      if (x + 1 < 24) pixels[y2][x + 1] = BG2
+      if (y2 - 1 >= 0 && pixels[y2 - 1][x] === _) pixels[y2 - 1][x] = BG2
+    }
+  }
+  // Second pair of knobs (top-right, bottom-left)
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = 8 + dx, y2 = 5 + dy
+      if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist <= 1.5) pixels[y2][x] = BW2
+      }
+    }
+  }
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = 16 + dx, y2 = 19 + dy
+      if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        if (dist <= 1.5) pixels[y2][x] = BW2
+      }
+    }
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_skull: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const BW2 = '#DDDDDD', BG2 = '#BBBBBB', EY = '#222222'
+  // Cranium (oval)
+  for (let y2 = 3; y2 < 15; y2++) {
+    for (let x = 5; x < 19; x++) {
+      const dx = (x - 12) / 7, dy = (y2 - 9) / 6
+      const dist = dx * dx + dy * dy
+      if (dist <= 1) {
+        if (dist > 0.75) pixels[y2][x] = BG2
+        else pixels[y2][x] = BW2
+      }
+    }
+  }
+  // Eye sockets
+  for (let y2 = 7; y2 < 11; y2++) {
+    for (let x = 7; x < 10; x++) pixels[y2][x] = EY
+    for (let x = 14; x < 17; x++) pixels[y2][x] = EY
+  }
+  // Nose
+  pixels[11][11] = EY; pixels[11][12] = EY
+  pixels[12][11] = EY; pixels[12][12] = EY
+  // Jaw
+  for (let x = 7; x < 17; x++) {
+    pixels[15][x] = BG2
+    pixels[16][x] = BW2
+  }
+  // Teeth
+  for (let x = 8; x < 16; x += 2) {
+    pixels[17][x] = BW2
+    pixels[18][x] = BG2
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_fang: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const FW = '#EEEEEE', FG = '#DDDDDD', FD = '#CCCCCC'
+  // Curved fang shape - thick at top, pointed at bottom
+  // Top (wide base)
+  for (let x = 9; x < 16; x++) { pixels[3][x] = FG; pixels[4][x] = FW }
+  for (let x = 9; x < 15; x++) { pixels[5][x] = FW; pixels[6][x] = FW }
+  for (let x = 10; x < 15; x++) { pixels[7][x] = FW; pixels[8][x] = FW }
+  for (let x = 10; x < 14; x++) { pixels[9][x] = FW; pixels[10][x] = FW }
+  for (let x = 11; x < 14; x++) { pixels[11][x] = FW; pixels[12][x] = FW }
+  for (let x = 11; x < 13; x++) { pixels[13][x] = FW; pixels[14][x] = FW }
+  pixels[15][11] = FW; pixels[15][12] = FW
+  pixels[16][12] = FW; pixels[17][12] = FG
+  pixels[18][12] = FG; pixels[19][13] = FD
+  pixels[20][13] = FD
+  // Shading on right edge
+  for (let y2 = 4; y2 < 16; y2++) {
+    for (let x = 0; x < 24; x++) {
+      if (pixels[y2][x] === FW && (pixels[y2][x + 1] === _ || x + 1 >= 24)) {
+        pixels[y2][x] = FG
+      }
+    }
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_feather: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const FB = '#8B5A2B', FL2 = '#A67B4E', FQ = '#D4B483'
+  // Quill (thin line from bottom-right to center)
+  for (let i = 0; i < 18; i++) {
+    const x = 20 - i, y2 = 22 - i
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) pixels[y2][x] = FQ
+  }
+  // Feather vanes (widening around quill)
+  for (let i = 3; i < 16; i++) {
+    const cx = 20 - i, cy = 22 - i
+    // Left side vane
+    for (let v = 1; v <= Math.min(i / 2, 4); v++) {
+      const vx = cx - v, vy = cy + (v > 2 ? 1 : 0)
+      if (vx >= 0 && vx < 24 && vy >= 0 && vy < 24) {
+        pixels[vy][vx] = v <= 2 ? FB : FL2
+      }
+    }
+    // Right side vane
+    for (let v = 1; v <= Math.min(i / 2, 4); v++) {
+      const vx = cx + (v > 2 ? 1 : 0), vy = cy - v
+      if (vx >= 0 && vx < 24 && vy >= 0 && vy < 24) {
+        pixels[vy][vx] = v <= 2 ? FB : FL2
+      }
+    }
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_cloth: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const CL2 = '#795548', CD2 = '#5D4037', CH = '#8D6E63'
+  // Folded cloth - rectangular with folds
+  for (let y2 = 7; y2 < 18; y2++) {
+    for (let x = 4; x < 20; x++) {
+      pixels[y2][x] = CL2
+    }
+  }
+  // Border
+  for (let x = 4; x < 20; x++) { pixels[7][x] = CD2; pixels[17][x] = CD2 }
+  for (let y2 = 7; y2 < 18; y2++) { pixels[y2][4] = CD2; pixels[y2][19] = CD2 }
+  // Fold lines
+  for (let x = 5; x < 19; x++) {
+    pixels[10][x] = CD2
+    pixels[14][x] = CD2
+  }
+  // Highlights on folds
+  for (let x = 6; x < 18; x++) {
+    pixels[9][x] = CH
+    pixels[13][x] = CH
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_circuit: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const PCB = '#4CAF50', TR = '#FFD700', PD2 = '#2E7D32', CH2 = '#333333'
+  // PCB board base
+  for (let y2 = 5; y2 < 19; y2++) {
+    for (let x = 4; x < 20; x++) {
+      pixels[y2][x] = PCB
+    }
+  }
+  // Border
+  for (let x = 4; x < 20; x++) { pixels[5][x] = PD2; pixels[18][x] = PD2 }
+  for (let y2 = 5; y2 < 19; y2++) { pixels[y2][4] = PD2; pixels[y2][19] = PD2 }
+  // Horizontal traces
+  for (let x = 5; x < 19; x++) { pixels[8][x] = TR; pixels[12][x] = TR; pixels[16][x] = TR }
+  // Vertical traces
+  for (let y2 = 6; y2 < 18; y2++) { pixels[y2][8] = TR; pixels[y2][15] = TR }
+  // Chip in center
+  for (let y2 = 10; y2 < 15; y2++) {
+    for (let x = 10; x < 14; x++) {
+      pixels[y2][x] = CH2
+    }
+  }
+  // Chip pins
+  pixels[10][9] = TR; pixels[12][9] = TR; pixels[14][9] = TR
+  pixels[10][14] = TR; pixels[12][14] = TR; pixels[14][14] = TR
+  return { width: 24, height: 24, pixels }
+})()
+
+// --- Equipment Items ---
+
+const weapon_sword_fire: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const FR = '#E53935', FO = '#FF8C00', FY = '#FFC107', GG2 = '#FFD700'
+  // Blade (diagonal from top-right to center) with fire gradient
+  for (let i = 0; i < 12; i++) {
+    const x = 18 - i, y2 = 2 + i
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+      // Fire gradient: yellow at tip, orange mid, red base
+      const c = i < 4 ? FY : i < 8 ? FO : FR
+      pixels[y2][x] = c
+      if (x + 1 < 24) pixels[y2][x + 1] = i < 6 ? FY : FO
+      if (x - 1 >= 0) pixels[y2][x - 1] = i < 4 ? FO : FR
+    }
+  }
+  // Fire wisps along blade
+  pixels[3][20] = FY; pixels[4][19] = FY; pixels[5][17] = FO
+  pixels[6][18] = FY; pixels[7][15] = FO
+  // Guard
+  for (let x = 4; x < 16; x++) {
+    pixels[14][x] = GG2
+    pixels[15][x] = '#B8860B'
+  }
+  // Handle
+  for (let i = 0; i < 6; i++) {
+    const x = 6 - i, y2 = 16 + i
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+      pixels[y2][x] = BN
+      if (x + 1 < 24) pixels[y2][x + 1] = BD
+    }
+  }
+  // Pommel
+  pixels[22][1] = GG2; pixels[22][2] = GG2
+  pixels[23][1] = GG2; pixels[23][2] = GG2
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_dagger: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const BL2 = '#AAAAAA', BD2 = '#888888', LG2 = '#6B3A1F'
+  // Short blade (diagonal, shorter than sword)
+  for (let i = 0; i < 8; i++) {
+    const x = 17 - i, y2 = 4 + i
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+      pixels[y2][x] = BL2
+      if (x + 1 < 24) pixels[y2][x + 1] = BD2
+    }
+  }
+  // Point
+  pixels[3][18] = BD2
+  // Guard (small)
+  for (let x = 7; x < 13; x++) {
+    pixels[12][x] = GD2
+  }
+  // Grip
+  for (let i = 0; i < 5; i++) {
+    const x = 8 - i, y2 = 13 + i
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) {
+      pixels[y2][x] = LG2
+      if (x + 1 < 24) pixels[y2][x + 1] = BN
+    }
+  }
+  // Pommel
+  pixels[18][3] = BD2; pixels[18][4] = BD2
+  pixels[19][3] = BD2; pixels[19][4] = BD2
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_axe: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const AH = '#888888', AD2 = '#666666', WD = '#8B5A2B'
+  // Handle (vertical)
+  for (let y2 = 4; y2 < 22; y2++) {
+    pixels[y2][12] = WD
+    pixels[y2][13] = BD
+  }
+  // Axe head (left side, broad)
+  for (let y2 = 3; y2 < 13; y2++) {
+    const width = y2 < 5 ? (y2 - 3) * 2 + 2 : y2 < 10 ? 8 : 8 - (y2 - 9) * 2
+    for (let dx = 0; dx < width; dx++) {
+      const x = 11 - dx
+      if (x >= 0 && x < 24) {
+        if (dx === width - 1 || y2 === 3 || y2 === 12) pixels[y2][x] = AD2
+        else pixels[y2][x] = AH
+      }
+    }
+  }
+  // Edge highlight
+  for (let y2 = 4; y2 < 12; y2++) {
+    const edgeX = y2 < 5 ? 10 : y2 < 10 ? 4 : 4 + (y2 - 9) * 2
+    if (edgeX >= 0 && edgeX < 24) pixels[y2][edgeX] = '#AAAAAA'
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_hammer: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const HM = '#777777', HD3 = '#555555', WD = '#8B5A2B'
+  // Handle (vertical)
+  for (let y2 = 10; y2 < 23; y2++) {
+    pixels[y2][12] = WD
+    pixels[y2][13] = BD
+  }
+  // Hammer head (wide rectangle at top)
+  for (let y2 = 2; y2 < 10; y2++) {
+    for (let x = 4; x < 21; x++) {
+      if (y2 === 2 || y2 === 9 || x === 4 || x === 20) pixels[y2][x] = HD3
+      else pixels[y2][x] = HM
+    }
+  }
+  // Face highlights
+  for (let y2 = 4; y2 < 8; y2++) {
+    pixels[y2][6] = '#999999'
+    pixels[y2][7] = '#999999'
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_staff: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const WD = '#8B5A2B', CO = '#9575CD', CL3 = '#B39DDB'
+  // Staff pole
+  for (let y2 = 8; y2 < 23; y2++) {
+    pixels[y2][12] = WD
+    pixels[y2][13] = BD
+  }
+  // Crystal orb at top
+  for (let y2 = 1; y2 < 9; y2++) {
+    for (let x = 8; x < 17; x++) {
+      const dx = x - 12.5, dy = y2 - 5
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= 4) {
+        if (dist > 3) pixels[y2][x] = '#7E57C2'
+        else pixels[y2][x] = CO
+      }
+    }
+  }
+  // Crystal highlight
+  pixels[3][10] = CL3; pixels[3][11] = CL3
+  pixels[4][10] = CL3
+  // Inner glow
+  pixels[5][12] = '#D1C4E9'; pixels[5][13] = '#D1C4E9'
+  // Mounting prongs
+  pixels[8][10] = WD; pixels[8][11] = WD
+  pixels[8][14] = WD; pixels[8][15] = WD
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_crossbow: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const WD = '#8B5A2B', MT = '#888888', MTD = '#666666', STR = '#C8B8A0'
+  // Stock (horizontal, center-right)
+  for (let x = 8; x < 20; x++) {
+    pixels[12][x] = WD
+    pixels[13][x] = BD
+  }
+  // Bow arms (vertical at left)
+  for (let y2 = 3; y2 < 22; y2++) {
+    pixels[y2][7] = MT
+    pixels[y2][8] = MTD
+  }
+  // Bow curve
+  pixels[3][8] = MT; pixels[3][9] = MT
+  pixels[22][8] = MT; pixels[22][9] = MT
+  // String
+  for (let y2 = 3; y2 < 12; y2++) pixels[y2][9] = STR
+  for (let y2 = 14; y2 < 22; y2++) pixels[y2][9] = STR
+  pixels[12][9] = STR; pixels[13][9] = STR
+  // Bolt
+  for (let x = 9; x < 22; x++) pixels[12][x] = SB
+  pixels[11][21] = MT; pixels[13][21] = MT
+  // Trigger
+  pixels[14][14] = MT; pixels[15][14] = MT; pixels[15][15] = MT
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_shield_wood: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const WL = '#A67B4E', WD = '#8B5A2B', RIM = '#888888'
+  // Round shield
+  for (let y2 = 3; y2 < 21; y2++) {
+    for (let x = 3; x < 21; x++) {
+      const dx = x - 12, dy = y2 - 12
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= 9) {
+        if (dist > 7.5) pixels[y2][x] = RIM
+        else if (dist > 6.5) pixels[y2][x] = WD
+        else pixels[y2][x] = WL
+      }
+    }
+  }
+  // Wood grain (horizontal lines)
+  for (let x = 5; x < 19; x++) {
+    if (pixels[8][x] === WL) pixels[8][x] = WD
+    if (pixels[12][x] === WL) pixels[12][x] = WD
+    if (pixels[16][x] === WL) pixels[16][x] = WD
+  }
+  // Center boss
+  for (let y2 = 10; y2 < 14; y2++) {
+    for (let x = 10; x < 14; x++) {
+      pixels[y2][x] = RIM
+    }
+  }
+  pixels[11][11] = '#AAAAAA'; pixels[11][12] = '#AAAAAA'
+  pixels[12][11] = '#AAAAAA'; pixels[12][12] = '#AAAAAA'
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_shield_iron: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const IM = '#AAAAAA', ID = '#888888', IK = '#666666'
+  // Kite shield shape
+  for (let y2 = 2; y2 < 21; y2++) {
+    const maxHalf = y2 < 5 ? 5 + y2 - 2 : y2 > 14 ? Math.max(0, 8 - (y2 - 14)) : 8
+    for (let dx = -maxHalf; dx <= maxHalf; dx++) {
+      const x = 12 + dx
+      if (x >= 0 && x < 24) {
+        if (Math.abs(dx) >= maxHalf - 1) pixels[y2][x] = IK
+        else if (y2 === 2 || y2 === 20) pixels[y2][x] = IK
+        else pixels[y2][x] = IM
+      }
+    }
+  }
+  // Embossed cross
+  for (let y2 = 4; y2 < 19; y2++) { pixels[y2][12] = ID; if (y2 < 17) pixels[y2][13] = ID }
+  for (let x = 6; x < 19; x++) { pixels[10][x] = ID; pixels[11][x] = ID }
+  // Rivets
+  pixels[4][12] = IK; pixels[18][12] = IK
+  pixels[10][6] = IK; pixels[10][18] = IK
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_shield_fire: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const IM = '#888888', IK = '#666666', FR = '#E53935', FO = '#FF8C00', FY = '#FFC107'
+  // Shield shape (same kite as iron)
+  for (let y2 = 2; y2 < 21; y2++) {
+    const maxHalf = y2 < 5 ? 5 + y2 - 2 : y2 > 14 ? Math.max(0, 8 - (y2 - 14)) : 8
+    for (let dx = -maxHalf; dx <= maxHalf; dx++) {
+      const x = 12 + dx
+      if (x >= 0 && x < 24) {
+        if (Math.abs(dx) >= maxHalf - 1 || y2 === 2 || y2 === 20) pixels[y2][x] = IK
+        else pixels[y2][x] = IM
+      }
+    }
+  }
+  // Flame emblem in center
+  // Flame base
+  for (let x = 10; x < 15; x++) { pixels[14][x] = FR; pixels[15][x] = FR }
+  for (let x = 9; x < 16; x++) { pixels[12][x] = FR; pixels[13][x] = FR }
+  for (let x = 10; x < 15; x++) { pixels[11][x] = FO }
+  for (let x = 11; x < 14; x++) { pixels[10][x] = FO }
+  for (let x = 11; x < 14; x++) { pixels[9][x] = FY }
+  pixels[8][12] = FY; pixels[7][12] = FY
+  // Inner flame
+  pixels[11][12] = FY; pixels[12][12] = FO; pixels[12][11] = FO; pixels[12][13] = FO
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_shield_tech: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const TC = '#A0CED9', TL2 = '#81D4FA', TK = '#546E7A', TD = '#37474F'
+  // Hexagonal shield shape
+  const hexRows: [number, number][] = [
+    [8, 16], [7, 17], [6, 18], [5, 19], [4, 20], [4, 20],
+    [4, 20], [4, 20], [4, 20], [4, 20], [4, 20], [4, 20],
+    [5, 19], [6, 18], [7, 17], [8, 16]
+  ]
+  for (let i = 0; i < hexRows.length; i++) {
+    const y2 = 4 + i
+    const [left, right] = hexRows[i]
+    for (let x = left; x < right; x++) {
+      if (x === left || x === right - 1) pixels[y2][x] = TD
+      else pixels[y2][x] = TK
+    }
+  }
+  // Cyan glow lines (tech pattern)
+  // Horizontal
+  for (let x = 6; x < 18; x++) {
+    if (pixels[8][x] === TK) pixels[8][x] = TC
+    if (pixels[12][x] === TK) pixels[12][x] = TC
+    if (pixels[16][x] === TK) pixels[16][x] = TC
+  }
+  // Vertical
+  for (let y2 = 5; y2 < 19; y2++) {
+    if (pixels[y2][9] === TK) pixels[y2][9] = TC
+    if (pixels[y2][14] === TK) pixels[y2][14] = TC
+  }
+  // Center glow
+  pixels[10][11] = TL2; pixels[10][12] = TL2
+  pixels[11][11] = TL2; pixels[11][12] = TL2
+  pixels[13][11] = TL2; pixels[13][12] = TL2
+  pixels[14][11] = TL2; pixels[14][12] = TL2
+  return { width: 24, height: 24, pixels }
+})()
+
+const weapon_ring: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const RG = '#FFD700', RD = '#DAA520', GM = '#E53935'
+  // Ring circle
+  for (let y2 = 6; y2 < 18; y2++) {
+    for (let x = 6; x < 18; x++) {
+      const dx = x - 12, dy = y2 - 12
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist >= 4 && dist <= 6) {
+        if (dist > 5.2) pixels[y2][x] = RD
+        else pixels[y2][x] = RG
+      }
+    }
+  }
+  // Gem setting at top
+  pixels[5][11] = RD; pixels[5][12] = RD; pixels[5][13] = RD
+  pixels[4][11] = GM; pixels[4][12] = GM; pixels[4][13] = GM
+  pixels[3][12] = GM
+  // Gem highlight
+  pixels[3][12] = '#FF8A80'
+  pixels[4][11] = '#FF8A80'
+  // Band thickness highlight
+  pixels[12][7] = '#FFECB3'
+  pixels[13][7] = '#FFECB3'
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_boots: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const LB = '#6B3A1F', LM = '#8B5A2B', LL = '#A67B4E', LC = '#C8B8A0'
+  // Left boot
+  // Shaft
+  for (let y2 = 5; y2 < 14; y2++) {
+    pixels[y2][4] = LB; pixels[y2][5] = LM; pixels[y2][6] = LM; pixels[y2][7] = LM; pixels[y2][8] = LB
+  }
+  // Foot
+  for (let x = 3; x < 11; x++) {
+    pixels[14][x] = LB; pixels[15][x] = LM; pixels[16][x] = LM; pixels[17][x] = LB
+  }
+  // Toe
+  pixels[15][11] = LM; pixels[16][11] = LM; pixels[17][11] = LB
+  // Laces
+  pixels[7][6] = LC; pixels[9][6] = LC; pixels[11][6] = LC
+  // Sole
+  for (let x = 3; x < 12; x++) pixels[18][x] = BK
+
+  // Right boot
+  for (let y2 = 5; y2 < 14; y2++) {
+    pixels[y2][14] = LB; pixels[y2][15] = LM; pixels[y2][16] = LM; pixels[y2][17] = LM; pixels[y2][18] = LB
+  }
+  for (let x = 13; x < 21; x++) {
+    pixels[14][x] = LB; pixels[15][x] = LM; pixels[16][x] = LM; pixels[17][x] = LB
+  }
+  pixels[15][21] = LM; pixels[16][21] = LM; pixels[17][21] = LB
+  pixels[7][16] = LC; pixels[9][16] = LC; pixels[11][16] = LC
+  for (let x = 13; x < 22; x++) pixels[18][x] = BK
+  // Top cuff
+  for (let x = 4; x < 9; x++) pixels[5][x] = LL
+  for (let x = 14; x < 19; x++) pixels[5][x] = LL
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_amulet: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const CG = '#FFD700', CD2 = '#DAA520', GM = '#E53935', GML = '#FF8A80'
+  // Chain (arc across top)
+  for (let i = 0; i < 14; i++) {
+    const angle = Math.PI * i / 13
+    const x = Math.round(12 - 8 * Math.cos(angle))
+    const y2 = Math.round(4 + 6 * Math.sin(angle) * 0.5)
+    if (x >= 0 && x < 24 && y2 >= 0 && y2 < 24) pixels[y2][x] = CG
+  }
+  // Chain links (vertical down to pendant)
+  for (let y2 = 5; y2 < 11; y2++) { pixels[y2][5] = CG; pixels[y2][19] = CG }
+  for (let y2 = 5; y2 < 13; y2++) { pixels[y2][6] = CD2 }
+  for (let y2 = 5; y2 < 13; y2++) { pixels[y2][18] = CD2 }
+  // V-chain to pendant
+  for (let i = 0; i < 5; i++) {
+    pixels[11 + i][6 + i] = CG
+    pixels[11 + i][18 - i] = CG
+  }
+  // Pendant frame
+  for (let y2 = 14; y2 < 21; y2++) {
+    for (let x = 9; x < 16; x++) {
+      const dx = x - 12.5, dy = y2 - 17
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist <= 3.5) {
+        if (dist > 2.5) pixels[y2][x] = CD2
+        else pixels[y2][x] = CG
+      }
+    }
+  }
+  // Gem in pendant center
+  pixels[16][12] = GM; pixels[16][13] = GM
+  pixels[17][12] = GM; pixels[17][13] = GM
+  pixels[18][12] = GM
+  // Gem sparkle
+  pixels[16][12] = GML
+  return { width: 24, height: 24, pixels }
+})()
+
+const item_cloak: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  const CKD = '#2A1A3E', CKM = '#3D2856', CKL = '#4E3A6B', CLP = '#FFD700'
+  // Folded cloak shape
+  for (let y2 = 4; y2 < 20; y2++) {
+    for (let x = 4; x < 20; x++) {
+      pixels[y2][x] = CKM
+    }
+  }
+  // Border
+  for (let x = 4; x < 20; x++) { pixels[4][x] = CKD; pixels[19][x] = CKD }
+  for (let y2 = 4; y2 < 20; y2++) { pixels[y2][4] = CKD; pixels[y2][19] = CKD }
+  // Fold lines (draped fabric look)
+  for (let x = 5; x < 19; x++) {
+    pixels[8][x] = CKD
+    pixels[13][x] = CKD
+    pixels[17][x] = CKD
+  }
+  // Fold highlights
+  for (let x = 6; x < 18; x++) {
+    pixels[7][x] = CKL
+    pixels[12][x] = CKL
+    pixels[16][x] = CKL
+  }
+  // Lighter section at top (showing inner lining)
+  for (let x = 6; x < 12; x++) {
+    pixels[5][x] = CKL; pixels[6][x] = CKL
+  }
+  // Gold clasp at top
+  pixels[4][12] = CLP; pixels[4][13] = CLP
+  pixels[5][12] = CLP; pixels[5][13] = CLP
+  pixels[3][12] = CLP; pixels[3][13] = CLP
+  // Clasp gem
+  pixels[4][12] = '#E53935'
+  return { width: 24, height: 24, pixels }
+})()
+
 // ============================================================
 // DECORATIONS (various sizes)
 // ============================================================
@@ -2851,6 +3886,41 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   item_potion_blue,
   item_key,
   item_coin,
+  // Consumables
+  item_potion_green,
+  item_potion_purple,
+  item_potion_yellow,
+  item_potion_white,
+  item_heart,
+  item_gem_red,
+  item_gem_blue,
+  item_gem_green,
+  item_gem_purple,
+  item_gem_white,
+  item_coin_gold,
+  item_coin_silver,
+  item_coin_bronze,
+  item_bone,
+  item_skull,
+  item_fang,
+  item_feather,
+  item_cloth,
+  item_circuit,
+  // Equipment
+  weapon_sword_fire,
+  weapon_dagger,
+  weapon_axe,
+  weapon_hammer,
+  weapon_staff,
+  weapon_crossbow,
+  weapon_shield_wood,
+  weapon_shield_iron,
+  weapon_shield_fire,
+  weapon_shield_tech,
+  weapon_ring,
+  item_boots,
+  item_amulet,
+  item_cloak,
   // Decorations
   deco_torch,
   deco_sign,
