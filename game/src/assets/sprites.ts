@@ -108,6 +108,45 @@ const OG = '#9575CD' // orb glow mid
 const OL = '#B39DDB' // orb glow light
 const OD = '#7E57C2' // orb glow dark
 
+// --- Dragon palette ---
+const DRS1 = '#B71C1C' // dragon scales darkest
+const DRS2 = '#C62828' // dragon scales dark
+const DRS3 = '#D32F2F' // dragon scales mid
+const DRS4 = '#E53935' // dragon scales light
+const DWD = '#FF8F00' // dragon wing dark
+const DWM = '#F57F17' // dragon wing mid
+const DWL = '#FFB300' // dragon wing light
+const DUB = '#FFD54F' // dragon underbelly
+const DFR1 = '#FF9800' // dragon fire outer
+const DFR2 = '#FFC107' // dragon fire mid
+const DFR3 = '#FFEB3B' // dragon fire bright
+const DHN = '#222222' // dragon horn
+const DEY = '#FFC107' // dragon eye
+
+// --- Golem palette ---
+const GST1 = '#424242' // golem stone darkest
+const GST2 = '#616161' // golem stone dark
+const GST3 = '#757575' // golem stone mid
+const GST4 = '#9E9E9E' // golem stone light
+const GST5 = '#BDBDBD' // golem stone highlight
+const GCR1 = '#7E57C2' // golem crystal dark
+const GCR2 = '#9575CD' // golem crystal mid
+const GCR3 = '#B39DDB' // golem crystal light
+const GCR4 = '#D1C4E9' // golem crystal glow
+const GMS = '#4CAF50' // golem moss
+
+// --- Demon palette ---
+const DMS1 = '#B71C1C' // demon skin darkest
+const DMS2 = '#C62828' // demon skin dark
+const DMS3 = '#D32F2F' // demon skin mid
+const DMS4 = '#E53935' // demon skin highlight
+const DWG1 = '#3E2723' // demon wing dark
+const DWG2 = '#5D4037' // demon wing mid
+const DWG3 = '#795548' // demon wing membrane
+const DMH = '#222222' // demon horn/hoof
+const DMH2 = '#333333' // demon horn light
+const DME = '#FFC107' // demon eyes
+
 // --- Skin Tone & Hair Palettes for character diversity ---
 export interface PaletteEntry { base: string; shadow: string }
 
@@ -1868,6 +1907,700 @@ const deco_crystal: SpriteData = (() => {
 })()
 
 // ============================================================
+// BOSSES (48x48)
+// ============================================================
+
+const boss_dragon: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(48).fill(_))
+
+  // --- Horns (rows 0-5) ---
+  // Left horn
+  pixels[0][17] = DHN; pixels[0][18] = DHN
+  pixels[1][16] = DHN; pixels[1][17] = DHN; pixels[1][18] = DHN
+  pixels[2][16] = DHN; pixels[2][17] = DHN; pixels[2][18] = DHN
+  pixels[3][17] = DHN; pixels[3][18] = DHN; pixels[3][19] = DHN
+  pixels[4][18] = DHN; pixels[4][19] = DHN; pixels[4][20] = DHN
+  pixels[5][19] = DHN; pixels[5][20] = DHN
+
+  // Right horn
+  pixels[0][29] = DHN; pixels[0][30] = DHN
+  pixels[1][29] = DHN; pixels[1][30] = DHN; pixels[1][31] = DHN
+  pixels[2][29] = DHN; pixels[2][30] = DHN; pixels[2][31] = DHN
+  pixels[3][28] = DHN; pixels[3][29] = DHN; pixels[3][30] = DHN
+  pixels[4][27] = DHN; pixels[4][28] = DHN; pixels[4][29] = DHN
+  pixels[5][27] = DHN; pixels[5][28] = DHN
+
+  // --- Head (rows 4-11) ---
+  for (let y2 = 4; y2 <= 11; y2++) {
+    const topInset = Math.max(0, 4 - (y2 - 4))
+    const left = 20 + topInset
+    const right = 27 - topInset
+    for (let x = left; x <= right; x++) {
+      if (x === left || x === right) pixels[y2][x] = DRS1
+      else if (x === left + 1 || x === right - 1) pixels[y2][x] = DRS2
+      else pixels[y2][x] = DRS3
+    }
+  }
+  // Crest ridges on top of head
+  for (let x = 21; x <= 26; x += 2) {
+    pixels[4][x] = DRS1
+    pixels[3][x] = DRS2
+  }
+
+  // Eyes (row 7-8)
+  pixels[7][21] = DEY; pixels[7][22] = BK
+  pixels[8][21] = DEY; pixels[8][22] = BK
+  pixels[7][25] = BK; pixels[7][26] = DEY
+  pixels[8][25] = BK; pixels[8][26] = DEY
+
+  // Snout (rows 9-11)
+  for (let x = 21; x <= 26; x++) {
+    pixels[9][x] = DRS3
+    pixels[10][x] = DRS2
+  }
+  pixels[10][22] = BK; pixels[10][25] = BK // nostrils
+
+  // --- Fire breath (rows 12-18, coming from mouth) ---
+  // Mouth opening
+  pixels[11][22] = DRS1; pixels[11][23] = DFR1; pixels[11][24] = DFR1; pixels[11][25] = DRS1
+  // Fire expanding downward/forward
+  for (let y2 = 12; y2 <= 18; y2++) {
+    const spread = Math.floor((y2 - 12) * 1.5)
+    const cx = 23
+    for (let dx = -1 - spread; dx <= 1 + spread; dx++) {
+      const x = cx + dx
+      if (x >= 0 && x < 48) {
+        const dist = Math.abs(dx)
+        if (dist <= 1) pixels[y2][x] = DFR3
+        else if (dist <= 2 + (y2 - 12) / 2) pixels[y2][x] = DFR2
+        else pixels[y2][x] = DFR1
+      }
+    }
+  }
+
+  // --- Neck (rows 12-16) ---
+  for (let y2 = 12; y2 <= 16; y2++) {
+    for (let x = 19; x <= 21; x++) pixels[y2][x] = DRS2
+    for (let x = 26; x <= 28; x++) pixels[y2][x] = DRS2
+    // Neck connects head to body on the sides of the fire
+  }
+
+  // --- Wings (rows 6-28, wide span) ---
+  // Left wing
+  for (let y2 = 6; y2 <= 28; y2++) {
+    const wingProgress = (y2 - 6) / 22
+    // Wing arm (leading edge)
+    const armX = Math.floor(18 - wingProgress * 16)
+    if (armX >= 0) {
+      pixels[y2][armX] = DRS1
+      if (armX + 1 < 19) pixels[y2][armX + 1] = DRS2
+    }
+    // Wing membrane
+    if (y2 >= 10 && y2 <= 26) {
+      const memStart = Math.max(1, armX + 2)
+      const memEnd = 18
+      for (let x = memStart; x <= memEnd; x++) {
+        const t = (x - memStart) / Math.max(1, memEnd - memStart)
+        if ((x + y2) % 6 === 0) pixels[y2][x] = DWD // vein lines
+        else if (t < 0.3) pixels[y2][x] = DWD
+        else if (t < 0.7) pixels[y2][x] = DWM
+        else pixels[y2][x] = DWL
+      }
+    }
+    // Wing fingers / structural ribs
+    if (y2 >= 8 && y2 <= 26 && (y2 - 8) % 4 === 0) {
+      const ribEnd = Math.max(1, armX + 1)
+      for (let x = ribEnd; x <= 18; x++) {
+        pixels[y2][x] = DRS1
+      }
+    }
+  }
+
+  // Right wing (mirror)
+  for (let y2 = 6; y2 <= 28; y2++) {
+    const wingProgress = (y2 - 6) / 22
+    const armX = Math.floor(29 + wingProgress * 16)
+    if (armX < 48) {
+      pixels[y2][armX] = DRS1
+      if (armX - 1 > 28) pixels[y2][armX - 1] = DRS2
+    }
+    if (y2 >= 10 && y2 <= 26) {
+      const memStart = 29
+      const memEnd = Math.min(46, armX - 2)
+      for (let x = memStart; x <= memEnd; x++) {
+        const t = (x - memStart) / Math.max(1, memEnd - memStart)
+        if ((x + y2) % 6 === 0) pixels[y2][x] = DWD
+        else if (t > 0.7) pixels[y2][x] = DWD
+        else if (t > 0.3) pixels[y2][x] = DWM
+        else pixels[y2][x] = DWL
+      }
+    }
+    if (y2 >= 8 && y2 <= 26 && (y2 - 8) % 4 === 0) {
+      const ribEnd = Math.min(46, armX - 1)
+      for (let x = 29; x <= ribEnd; x++) {
+        pixels[y2][x] = DRS1
+      }
+    }
+  }
+
+  // --- Body / torso (rows 17-32) ---
+  for (let y2 = 17; y2 <= 32; y2++) {
+    const bodyHalf = y2 < 22 ? 6 : y2 < 28 ? 7 : 6 - Math.floor((y2 - 28) / 2)
+    const cx = 24
+    for (let dx = -bodyHalf; dx <= bodyHalf; dx++) {
+      const x = cx + dx
+      if (x >= 0 && x < 48) {
+        const absDx = Math.abs(dx)
+        if (absDx >= bodyHalf - 1) pixels[y2][x] = DRS1
+        else if (absDx >= bodyHalf - 2) pixels[y2][x] = DRS2
+        else if (dx < -1) pixels[y2][x] = DRS3
+        else if (dx > 1) pixels[y2][x] = DRS3
+        else pixels[y2][x] = DUB // underbelly center stripe
+      }
+    }
+  }
+  // Underbelly horizontal bands (detail)
+  for (let y2 = 18; y2 <= 31; y2 += 2) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = 24 + dx
+      if (pixels[y2][x] === DUB) pixels[y2][x] = '#FFC44D' // slightly diff shade band
+    }
+  }
+
+  // --- Legs (rows 30-40) ---
+  // Left leg
+  for (let y2 = 30; y2 <= 40; y2++) {
+    const legX = 20 + Math.floor((y2 - 30) * 0.3)
+    for (let dx = 0; dx < 4; dx++) {
+      const x = legX + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = dx === 0 || dx === 3 ? DRS1 : DRS3
+      }
+    }
+  }
+  // Left claws
+  pixels[41][20] = DHN; pixels[41][21] = DHN; pixels[41][22] = DRS2
+  pixels[41][23] = DHN; pixels[41][24] = DHN
+
+  // Right leg
+  for (let y2 = 30; y2 <= 40; y2++) {
+    const legX = 26 - Math.floor((y2 - 30) * 0.3)
+    for (let dx = 0; dx < 4; dx++) {
+      const x = legX + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = dx === 0 || dx === 3 ? DRS1 : DRS3
+      }
+    }
+  }
+  // Right claws
+  pixels[41][25] = DHN; pixels[41][26] = DHN; pixels[41][27] = DRS2
+  pixels[41][28] = DHN; pixels[41][29] = DHN
+
+  // --- Tail (rows 28-47, curving to the right) ---
+  for (let i = 0; i <= 20; i++) {
+    const t = i / 20
+    const ty = 28 + Math.floor(i * 0.85)
+    const tx = 30 + Math.floor(Math.sin(t * Math.PI) * 10)
+    if (ty < 48 && tx < 48 && tx >= 0) {
+      const thickness = Math.max(1, Math.floor(3 * (1 - t * 0.6)))
+      for (let dt = -thickness; dt <= thickness; dt++) {
+        const yy = ty + dt
+        if (yy >= 0 && yy < 48) {
+          if (Math.abs(dt) === thickness) pixels[yy][tx] = DRS1
+          else pixels[yy][tx] = DRS3
+          if (tx + 1 < 48) pixels[yy][tx + 1] = DRS2
+        }
+      }
+    }
+  }
+  // Tail tip spade
+  pixels[44][38] = DRS4; pixels[44][39] = DRS1; pixels[44][40] = DRS4
+  pixels[45][37] = DRS4; pixels[45][38] = DRS1; pixels[45][39] = DRS1; pixels[45][40] = DRS1; pixels[45][41] = DRS4
+  pixels[46][38] = DRS4; pixels[46][39] = DRS1; pixels[46][40] = DRS4
+
+  return { width: 48, height: 48, pixels }
+})()
+
+const boss_golem: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(48).fill(_))
+
+  // --- Head (rows 2-10, small relative to body) ---
+  for (let y2 = 2; y2 <= 10; y2++) {
+    const headHalf = y2 < 4 ? 3 : y2 < 8 ? 4 : 3
+    const cx = 24
+    for (let dx = -headHalf; dx <= headHalf; dx++) {
+      const x = cx + dx
+      if (x >= 0 && x < 48) {
+        const absDx = Math.abs(dx)
+        if (absDx >= headHalf) pixels[y2][x] = GST1
+        else if ((x + y2) % 5 === 0) pixels[y2][x] = GST4 // stone texture
+        else if ((x + y2) % 3 === 0) pixels[y2][x] = GST2
+        else pixels[y2][x] = GST3
+      }
+    }
+  }
+
+  // Eyes (glowing crystal, rows 5-7)
+  pixels[5][22] = GCR2; pixels[5][23] = GCR3
+  pixels[6][22] = GCR3; pixels[6][23] = GCR4
+  pixels[5][25] = GCR3; pixels[5][26] = GCR2
+  pixels[6][25] = GCR4; pixels[6][26] = GCR3
+
+  // Brow ridge
+  for (let x = 20; x <= 28; x++) pixels[4][x] = GST1
+  pixels[3][21] = GST1; pixels[3][27] = GST1
+
+  // Mouth crevice
+  pixels[8][22] = GST1; pixels[8][23] = GST1; pixels[8][24] = GST1; pixels[8][25] = GST1; pixels[8][26] = GST1
+
+  // --- Neck (rows 10-12) thick ---
+  for (let y2 = 10; y2 <= 12; y2++) {
+    for (let x = 19; x <= 29; x++) {
+      pixels[y2][x] = (x + y2) % 4 === 0 ? GST4 : GST2
+    }
+  }
+
+  // --- Massive torso (rows 13-32) ---
+  for (let y2 = 13; y2 <= 32; y2++) {
+    // Torso expands from top, widest in middle
+    let half: number
+    if (y2 < 17) half = 10 + (y2 - 13)
+    else if (y2 < 28) half = 14
+    else half = 14 - Math.floor((y2 - 28) * 0.8)
+    const cx = 24
+    for (let dx = -half; dx <= half; dx++) {
+      const x = cx + dx
+      if (x >= 0 && x < 48) {
+        const absDx = Math.abs(dx)
+        // Edge shading
+        if (absDx >= half - 1) pixels[y2][x] = GST1
+        else if (absDx >= half - 3) pixels[y2][x] = GST2
+        else {
+          // Interior stone texture with cracks
+          const v = (x * 7 + y2 * 13) % 11
+          if (v === 0) pixels[y2][x] = GST1 // crack
+          else if (v < 3) pixels[y2][x] = GST4 // highlight
+          else if (v < 6) pixels[y2][x] = GST2
+          else pixels[y2][x] = GST3
+        }
+      }
+    }
+  }
+
+  // --- Crystal core in chest (rows 17-25, centered) ---
+  const coreCx = 24, coreCy = 21
+  for (let y2 = 17; y2 <= 25; y2++) {
+    for (let x = 20; x <= 28; x++) {
+      const dx = x - coreCx, dy = y2 - coreCy
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (dist < 2) pixels[y2][x] = GCR4 // bright center
+      else if (dist < 3) pixels[y2][x] = GCR3
+      else if (dist < 4) pixels[y2][x] = GCR2
+      else if (dist < 5) pixels[y2][x] = GCR1
+    }
+  }
+  // Crystal glow emanating outward
+  pixels[19][18] = GCR1; pixels[19][30] = GCR1
+  pixels[21][17] = GCR1; pixels[21][31] = GCR1
+  pixels[23][18] = GCR1; pixels[23][30] = GCR1
+
+  // --- Moss patches ---
+  const mossSpots = [
+    [14, 13], [14, 14], [15, 12], [15, 13],
+    [26, 33], [26, 34], [27, 34], [27, 35],
+    [30, 15], [30, 16], [31, 16],
+    [16, 34], [17, 33], [17, 34],
+  ]
+  for (const [my, mx] of mossSpots) {
+    if (my < 48 && mx < 48 && pixels[my][mx] !== _) {
+      pixels[my][mx] = GMS
+    }
+  }
+
+  // --- Arms (rows 14-36, massive fists) ---
+  // Left arm
+  for (let y2 = 14; y2 <= 30; y2++) {
+    const armOffset = Math.floor((y2 - 14) * 0.5)
+    const armLeft = 8 - armOffset
+    const armRight = 12 - armOffset
+    for (let x = Math.max(0, armLeft); x <= Math.min(47, armRight); x++) {
+      if (x === armLeft || x === armRight) pixels[y2][x] = GST1
+      else pixels[y2][x] = (x + y2) % 3 === 0 ? GST4 : GST2
+    }
+    // Connecting to shoulder
+    if (y2 <= 18) {
+      for (let x = armRight + 1; x < 24 - 14 + (y2 - 13); x++) {
+        if (pixels[y2][x] === _) pixels[y2][x] = GST2
+      }
+    }
+  }
+  // Left fist (huge, rows 31-36)
+  for (let y2 = 31; y2 <= 36; y2++) {
+    const fistHalf = y2 < 34 ? 5 : 4
+    const fistCx = 5
+    for (let dx = -fistHalf; dx <= fistHalf; dx++) {
+      const x = fistCx + dx
+      if (x >= 0 && x < 48) {
+        if (Math.abs(dx) >= fistHalf) pixels[y2][x] = GST1
+        else pixels[y2][x] = (x + y2) % 4 === 0 ? GST4 : GST3
+      }
+    }
+  }
+  // Fist cracks
+  pixels[33][4] = GST1; pixels[34][5] = GST1; pixels[33][6] = GST1
+
+  // Right arm
+  for (let y2 = 14; y2 <= 30; y2++) {
+    const armOffset = Math.floor((y2 - 14) * 0.5)
+    const armLeft = 35 + armOffset
+    const armRight = 39 + armOffset
+    for (let x = Math.max(0, armLeft); x <= Math.min(47, armRight); x++) {
+      if (x === armLeft || x === armRight) pixels[y2][x] = GST1
+      else pixels[y2][x] = (x + y2) % 3 === 0 ? GST4 : GST2
+    }
+    if (y2 <= 18) {
+      for (let x = 24 + 14 - (y2 - 13); x < armLeft; x++) {
+        if (pixels[y2][x] === _) pixels[y2][x] = GST2
+      }
+    }
+  }
+  // Right fist
+  for (let y2 = 31; y2 <= 36; y2++) {
+    const fistHalf = y2 < 34 ? 5 : 4
+    const fistCx = 42
+    for (let dx = -fistHalf; dx <= fistHalf; dx++) {
+      const x = fistCx + dx
+      if (x >= 0 && x < 48) {
+        if (Math.abs(dx) >= fistHalf) pixels[y2][x] = GST1
+        else pixels[y2][x] = (x + y2) % 4 === 0 ? GST4 : GST3
+      }
+    }
+  }
+  pixels[33][41] = GST1; pixels[34][42] = GST1; pixels[33][43] = GST1
+
+  // --- Legs (rows 33-44, wide stance) ---
+  // Left leg
+  for (let y2 = 33; y2 <= 44; y2++) {
+    const legHalf = y2 < 38 ? 4 : 5
+    const legCx = 18
+    for (let dx = -legHalf; dx <= legHalf; dx++) {
+      const x = legCx + dx
+      if (x >= 0 && x < 48) {
+        if (Math.abs(dx) >= legHalf) pixels[y2][x] = GST1
+        else pixels[y2][x] = (x + y2) % 5 === 0 ? GST4 : GST3
+      }
+    }
+  }
+  // Left foot
+  for (let x = 12; x <= 24; x++) {
+    pixels[45][x] = GST1
+    pixels[46][x] = GST2
+    pixels[47][x] = GST1
+  }
+
+  // Right leg
+  for (let y2 = 33; y2 <= 44; y2++) {
+    const legHalf = y2 < 38 ? 4 : 5
+    const legCx = 30
+    for (let dx = -legHalf; dx <= legHalf; dx++) {
+      const x = legCx + dx
+      if (x >= 0 && x < 48) {
+        if (Math.abs(dx) >= legHalf) pixels[y2][x] = GST1
+        else pixels[y2][x] = (x + y2) % 5 === 0 ? GST4 : GST3
+      }
+    }
+  }
+  // Right foot
+  for (let x = 24; x <= 36; x++) {
+    pixels[45][x] = GST1
+    pixels[46][x] = GST2
+    pixels[47][x] = GST1
+  }
+
+  // --- Shoulder boulders (rows 11-16) ---
+  // Left shoulder
+  for (let y2 = 11; y2 <= 16; y2++) {
+    for (let x = 10; x <= 17; x++) {
+      const dx = x - 13, dy = y2 - 13
+      if (dx * dx + dy * dy <= 12) {
+        pixels[y2][x] = Math.abs(dx) + Math.abs(dy) > 3 ? GST1 : GST3
+      }
+    }
+  }
+  // Right shoulder
+  for (let y2 = 11; y2 <= 16; y2++) {
+    for (let x = 31; x <= 38; x++) {
+      const dx = x - 35, dy = y2 - 13
+      if (dx * dx + dy * dy <= 12) {
+        pixels[y2][x] = Math.abs(dx) + Math.abs(dy) > 3 ? GST1 : GST3
+      }
+    }
+  }
+
+  return { width: 48, height: 48, pixels }
+})()
+
+const boss_demon: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(48).fill(_))
+
+  // --- Horns (rows 0-7, curving upward and outward) ---
+  // Left horn (curves up-left)
+  const leftHorn = [
+    [7, 17], [6, 16], [5, 15], [4, 14], [3, 14], [2, 13], [1, 13], [0, 12],
+    [7, 18], [6, 17], [5, 16], [4, 15], [3, 15], [2, 14], [1, 14], [0, 13],
+  ]
+  for (const [hy, hx] of leftHorn) {
+    pixels[hy][hx] = hy < 3 ? DMH : DMH2
+  }
+
+  // Right horn (curves up-right, mirror)
+  const rightHorn = [
+    [7, 30], [6, 31], [5, 32], [4, 33], [3, 33], [2, 34], [1, 34], [0, 35],
+    [7, 29], [6, 30], [5, 31], [4, 32], [3, 32], [2, 33], [1, 33], [0, 34],
+  ]
+  for (const [hy, hx] of rightHorn) {
+    pixels[hy][hx] = hy < 3 ? DMH : DMH2
+  }
+
+  // --- Head (rows 5-13) ---
+  for (let y2 = 5; y2 <= 13; y2++) {
+    const headHalf = y2 < 7 ? 3 + (y2 - 5) : y2 < 11 ? 5 : 5 - (y2 - 11)
+    const cx = 24
+    for (let dx = -headHalf; dx <= headHalf; dx++) {
+      const x = cx + dx
+      if (x >= 0 && x < 48) {
+        const absDx = Math.abs(dx)
+        if (absDx >= headHalf) pixels[y2][x] = DMS1
+        else if (absDx >= headHalf - 1) pixels[y2][x] = DMS2
+        else pixels[y2][x] = DMS3
+      }
+    }
+  }
+
+  // Brow ridge (thick, menacing)
+  for (let x = 20; x <= 28; x++) pixels[7][x] = DMS1
+  pixels[7][19] = DMS1; pixels[7][29] = DMS1
+
+  // Glowing eyes (rows 8-9)
+  pixels[8][21] = DME; pixels[8][22] = DME; pixels[8][23] = BK
+  pixels[9][21] = BK; pixels[9][22] = DME
+  pixels[8][24] = BK; pixels[8][25] = DME; pixels[8][26] = DME
+  pixels[9][25] = DME; pixels[9][26] = BK
+
+  // Mouth / fangs (row 11-12)
+  pixels[11][22] = DMS1; pixels[11][23] = BK; pixels[11][24] = BK; pixels[11][25] = DMS1
+  pixels[12][21] = WH; pixels[12][22] = BK; pixels[12][23] = BK; pixels[12][24] = BK; pixels[12][25] = BK; pixels[12][26] = WH
+
+  // --- Neck (rows 13-15, muscular) ---
+  for (let y2 = 13; y2 <= 15; y2++) {
+    for (let x = 20; x <= 28; x++) {
+      pixels[y2][x] = (x + y2) % 3 === 0 ? DMS1 : DMS2
+    }
+  }
+
+  // --- Wings (rows 6-34, bat-style) ---
+  // Left wing
+  for (let y2 = 6; y2 <= 34; y2++) {
+    const wingProgress = (y2 - 6) / 28
+    // Wing arm (leading bone edge)
+    const armX = Math.floor(18 - wingProgress * 17)
+    if (armX >= 0) {
+      pixels[y2][armX] = DWG1
+      if (armX + 1 < 18) pixels[y2][armX + 1] = DWG1
+    }
+    // Wing membrane (thin, translucent look)
+    if (y2 >= 10 && y2 <= 32) {
+      const memStart = Math.max(1, armX + 2)
+      const memEnd = 18
+      for (let x = memStart; x <= memEnd; x++) {
+        if ((x + y2) % 7 === 0) pixels[y2][x] = DWG1 // vein
+        else if ((x + y2) % 3 === 0) pixels[y2][x] = DWG3 // lighter membrane
+        else pixels[y2][x] = DWG2
+      }
+    }
+    // Wing finger bones
+    if (y2 >= 8 && y2 <= 32 && (y2 - 8) % 5 === 0) {
+      const ribEnd = Math.max(0, armX + 1)
+      for (let x = ribEnd; x <= 18; x++) {
+        pixels[y2][x] = DWG1
+      }
+    }
+  }
+
+  // Right wing (mirror)
+  for (let y2 = 6; y2 <= 34; y2++) {
+    const wingProgress = (y2 - 6) / 28
+    const armX = Math.floor(29 + wingProgress * 17)
+    if (armX < 48) {
+      pixels[y2][armX] = DWG1
+      if (armX - 1 > 29) pixels[y2][armX - 1] = DWG1
+    }
+    if (y2 >= 10 && y2 <= 32) {
+      const memStart = 29
+      const memEnd = Math.min(46, armX - 2)
+      for (let x = memStart; x <= memEnd; x++) {
+        if ((x + y2) % 7 === 0) pixels[y2][x] = DWG1
+        else if ((x + y2) % 3 === 0) pixels[y2][x] = DWG3
+        else pixels[y2][x] = DWG2
+      }
+    }
+    if (y2 >= 8 && y2 <= 32 && (y2 - 8) % 5 === 0) {
+      const ribEnd = Math.min(47, armX - 1)
+      for (let x = 29; x <= ribEnd; x++) {
+        pixels[y2][x] = DWG1
+      }
+    }
+  }
+
+  // --- Muscular torso (rows 16-30) ---
+  for (let y2 = 16; y2 <= 30; y2++) {
+    let half: number
+    if (y2 < 20) half = 5 + (y2 - 16)
+    else if (y2 < 27) half = 9
+    else half = 9 - (y2 - 27)
+    const cx = 24
+    for (let dx = -half; dx <= half; dx++) {
+      const x = cx + dx
+      if (x >= 0 && x < 48) {
+        const absDx = Math.abs(dx)
+        if (absDx >= half) pixels[y2][x] = DMS1
+        else if (absDx >= half - 2) pixels[y2][x] = DMS2
+        else {
+          // Muscle definition lines
+          if ((y2 === 20 || y2 === 24) && absDx < 3) pixels[y2][x] = DMS1
+          else if (y2 >= 18 && y2 <= 26 && absDx === 3) pixels[y2][x] = DMS1
+          else if (absDx <= 1) pixels[y2][x] = DMS4 // center highlight
+          else pixels[y2][x] = DMS3
+        }
+      }
+    }
+  }
+
+  // Chest scar / rune marking
+  pixels[19][23] = DMS4; pixels[19][25] = DMS4
+  pixels[20][24] = DMS4
+  pixels[21][23] = DMS4; pixels[21][25] = DMS4
+
+  // --- Arms (rows 17-30, muscular) ---
+  // Left arm
+  for (let y2 = 17; y2 <= 30; y2++) {
+    const armX = 14 - Math.floor((y2 - 17) * 0.3)
+    for (let dx = 0; dx < 4; dx++) {
+      const x = armX + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = dx === 0 || dx === 3 ? DMS1 : DMS3
+      }
+    }
+  }
+  // Left claws
+  pixels[31][11] = DMH; pixels[31][12] = DMH; pixels[31][13] = DMH
+  pixels[32][10] = DMH; pixels[32][13] = DMH
+
+  // Right arm
+  for (let y2 = 17; y2 <= 30; y2++) {
+    const armX = 31 + Math.floor((y2 - 17) * 0.3)
+    for (let dx = 0; dx < 4; dx++) {
+      const x = armX + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = dx === 0 || dx === 3 ? DMS1 : DMS3
+      }
+    }
+  }
+  // Right claws
+  pixels[31][34] = DMH; pixels[31][35] = DMH; pixels[31][36] = DMH
+  pixels[32][34] = DMH; pixels[32][37] = DMH
+
+  // --- Digitigrade legs (rows 30-44) ---
+  // Left leg - upper thigh
+  for (let y2 = 30; y2 <= 36; y2++) {
+    const legCx = 20
+    for (let dx = -3; dx <= 3; dx++) {
+      const x = legCx + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = Math.abs(dx) >= 3 ? DMS1 : DMS3
+      }
+    }
+  }
+  // Left leg - backward knee bend
+  for (let y2 = 37; y2 <= 40; y2++) {
+    const bend = 19 - (y2 - 37)
+    for (let dx = -2; dx <= 2; dx++) {
+      const x = bend + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = Math.abs(dx) >= 2 ? DMS1 : DMS2
+      }
+    }
+  }
+  // Left leg - lower (forward angle to hoof)
+  for (let y2 = 41; y2 <= 44; y2++) {
+    const shin = 17 + (y2 - 41) * 1
+    for (let dx = -2; dx <= 2; dx++) {
+      const x = shin + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = Math.abs(dx) >= 2 ? DMS1 : DMS2
+      }
+    }
+  }
+  // Left hoof
+  pixels[45][18] = DMH; pixels[45][19] = DMH; pixels[45][20] = DMH; pixels[45][21] = DMH
+  pixels[46][17] = DMH; pixels[46][18] = DMH; pixels[46][19] = DMH; pixels[46][20] = DMH; pixels[46][21] = DMH
+  pixels[47][17] = DMH; pixels[47][18] = DMH; pixels[47][19] = DMH; pixels[47][20] = DMH; pixels[47][21] = DMH
+
+  // Right leg - upper thigh
+  for (let y2 = 30; y2 <= 36; y2++) {
+    const legCx = 28
+    for (let dx = -3; dx <= 3; dx++) {
+      const x = legCx + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = Math.abs(dx) >= 3 ? DMS1 : DMS3
+      }
+    }
+  }
+  // Right leg - backward knee bend
+  for (let y2 = 37; y2 <= 40; y2++) {
+    const bend = 29 + (y2 - 37)
+    for (let dx = -2; dx <= 2; dx++) {
+      const x = bend + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = Math.abs(dx) >= 2 ? DMS1 : DMS2
+      }
+    }
+  }
+  // Right leg - lower (forward angle to hoof)
+  for (let y2 = 41; y2 <= 44; y2++) {
+    const shin = 31 - (y2 - 41) * 1
+    for (let dx = -2; dx <= 2; dx++) {
+      const x = shin + dx
+      if (x >= 0 && x < 48) {
+        pixels[y2][x] = Math.abs(dx) >= 2 ? DMS1 : DMS2
+      }
+    }
+  }
+  // Right hoof
+  pixels[45][27] = DMH; pixels[45][28] = DMH; pixels[45][29] = DMH; pixels[45][30] = DMH
+  pixels[46][27] = DMH; pixels[46][28] = DMH; pixels[46][29] = DMH; pixels[46][30] = DMH; pixels[46][31] = DMH
+  pixels[47][27] = DMH; pixels[47][28] = DMH; pixels[47][29] = DMH; pixels[47][30] = DMH; pixels[47][31] = DMH
+
+  // --- Tail (rows 28-42, thin whip-like) ---
+  for (let i = 0; i <= 16; i++) {
+    const t = i / 16
+    const ty = 28 + Math.floor(i * 0.9)
+    const tx = 24 + Math.floor(Math.sin(t * Math.PI * 1.5) * 8)
+    if (ty < 48 && tx >= 0 && tx < 48) {
+      pixels[ty][tx] = DMS1
+      if (tx + 1 < 48) pixels[ty][tx + 1] = DMS2
+    }
+  }
+  // Tail barb
+  pixels[42][31] = DMS4; pixels[43][30] = DMS1; pixels[43][31] = DMS1; pixels[43][32] = DMS4
+
+  return { width: 48, height: 48, pixels }
+})()
+
+// ============================================================
 // REGISTRY
 // ============================================================
 
@@ -1929,6 +2662,10 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   deco_bush,
   deco_flower,
   deco_crystal,
+  // Bosses
+  boss_dragon,
+  boss_golem,
+  boss_demon,
 }
 
 export function getAssetIds(): string[] {
