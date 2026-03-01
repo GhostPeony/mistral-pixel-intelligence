@@ -63,6 +63,38 @@ const GT = '#DAA520' // gold trim
 const GS = '#B8860B' // gold trim shadow
 const CB = '#81D4FA' // crystal blue
 
+// --- Spider palette ---
+const SPD = '#3E2723' // spider dark brown
+const SPM = '#5D4037' // spider mid brown
+const SPL = '#795548' // spider light brown
+const RE = '#E53935'  // red eyes
+
+// --- Wolf palette ---
+const WFD = '#616161' // wolf fur dark
+const WFM = '#757575' // wolf fur mid
+const WFL = '#9E9E9E' // wolf fur light
+const AE = '#FFC107'  // amber eyes
+
+// --- Orc palette ---
+const OKD = '#3A6420' // orc skin dark
+const OKM = '#4E7A2E' // orc skin mid
+const OKL = '#5A9C3E' // orc skin light
+
+// --- Zombie palette ---
+const ZSD = '#558B2F' // zombie skin dark
+const ZSM = '#7CB342' // zombie skin mid
+const ZCL = '#795548' // zombie clothes brown
+
+// --- Ghost palette ---
+const GHL = '#E1F5FE' // ghost lightest
+const GHM = '#B3E5FC' // ghost mid
+const GHD = '#81D4FA' // ghost darker
+
+// --- Snake palette ---
+const NKD = '#2E7D32' // snake dark green
+const NKM = '#4E7A2E' // snake mid green
+const NKY = '#FFC107' // snake underbelly yellow
+
 // --- Berserker palette ---
 const WP = '#E53935' // war paint red (same as DR but explicit)
 const FL = '#8B6240' // fur loincloth light
@@ -619,6 +651,300 @@ const enemy_goblin: SpriteData = {
     // Row 30-31: feet
     row(32, [_, 10], [SGD, 5], [_, 2], [SGD, 5], [_, 10]),
     row(32, [_, 10], [SGD, 5], [_, 2], [SGD, 5], [_, 10]),
+  ],
+}
+
+const enemy_spider: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-3: empty top (spider is low-profile)
+    ...Array(4).fill(row(32, [_, 32])),
+    // Row 4-5: leg tips (outermost reach)
+    row(32, [_, 2], [SPD, 2], [_, 8], [SPD, 2], [_, 4], [SPD, 2], [_, 8], [SPD, 2], [_, 2]),
+    row(32, [_, 3], [SPD, 2], [_, 6], [SPM, 2], [_, 6], [SPM, 2], [_, 6], [SPD, 2], [_, 3]),
+    // Row 6-7: upper legs spreading
+    row(32, [_, 4], [SPD, 2], [_, 4], [SPM, 2], [_, 8], [SPM, 2], [_, 4], [SPD, 2], [_, 4]),
+    row(32, [_, 5], [SPD, 2], [_, 2], [SPM, 2], [_, 10], [SPM, 2], [_, 2], [SPD, 2], [_, 5]),
+    // Row 8-9: legs connect to body area
+    row(32, [_, 6], [SPD, 2], [SPM, 2], [_, 12], [SPM, 2], [SPD, 2], [_, 6]),
+    row(32, [_, 7], [SPM, 2], [_, 2], [SPD, 8], [_, 2], [SPM, 2], [_, 7]),
+    // Row 10-11: body top with eyes
+    row(32, [_, 9], [SPD, 2], [SPM, 10], [SPD, 2], [_, 9]),
+    row(32, [_, 8], [SPD, 2], [SPM, 3], [RE, 2], [SPM, 2], [RE, 2], [SPM, 3], [SPD, 2], [_, 8]),
+    // Row 12-14: body center (round)
+    row(32, [_, 8], [SPD, 1], [SPM, 4], [SPL, 4], [SPM, 4], [SPD, 1], [_, 8]),
+    row(32, [_, 8], [SPD, 1], [SPM, 3], [SPL, 6], [SPM, 3], [SPD, 1], [_, 8]),
+    row(32, [_, 8], [SPD, 1], [SPM, 4], [SPL, 4], [SPM, 4], [SPD, 1], [_, 8]),
+    // Row 15-16: body bottom with markings
+    row(32, [_, 8], [SPD, 2], [SPM, 3], [SPD, 2], [SPM, 2], [SPD, 2], [SPM, 3], [SPD, 2], [_, 8]),
+    row(32, [_, 9], [SPD, 2], [SPM, 10], [SPD, 2], [_, 9]),
+    // Row 17-18: lower body taper + abdomen attachment
+    row(32, [_, 10], [SPD, 1], [SPM, 10], [SPD, 1], [_, 10]),
+    row(32, [_, 9], [SPD, 1], [SPM, 4], [SPD, 4], [SPM, 4], [SPD, 1], [_, 9]),
+    // Row 19-21: abdomen (larger, patterned)
+    row(32, [_, 8], [SPD, 2], [SPM, 12], [SPD, 2], [_, 8]),
+    row(32, [_, 7], [SPD, 2], [SPM, 3], [SPD, 2], [SPL, 4], [SPD, 2], [SPM, 3], [SPD, 2], [_, 7]),
+    row(32, [_, 7], [SPD, 1], [SPM, 4], [SPL, 6], [SPM, 4], [SPD, 1], [_, 7]),
+    // Row 22-23: abdomen lower
+    row(32, [_, 7], [SPD, 2], [SPM, 3], [SPD, 2], [SPL, 4], [SPD, 2], [SPM, 3], [SPD, 2], [_, 7]),
+    row(32, [_, 8], [SPD, 2], [SPM, 12], [SPD, 2], [_, 8]),
+    // Row 24-25: legs underneath
+    row(32, [_, 6], [SPD, 2], [SPM, 2], [_, 12], [SPM, 2], [SPD, 2], [_, 6]),
+    row(32, [_, 5], [SPD, 2], [_, 2], [SPM, 2], [_, 10], [SPM, 2], [_, 2], [SPD, 2], [_, 5]),
+    // Row 26-27: lower leg spread
+    row(32, [_, 4], [SPD, 2], [_, 4], [SPM, 2], [_, 8], [SPM, 2], [_, 4], [SPD, 2], [_, 4]),
+    row(32, [_, 3], [SPD, 2], [_, 6], [SPM, 2], [_, 6], [SPM, 2], [_, 6], [SPD, 2], [_, 3]),
+    // Row 28-29: leg tips bottom
+    row(32, [_, 2], [SPD, 2], [_, 8], [SPD, 2], [_, 4], [SPD, 2], [_, 8], [SPD, 2], [_, 2]),
+    row(32, [_, 1], [SPD, 2], [_, 10], [SPD, 2], [_, 2], [SPD, 2], [_, 10], [SPD, 2], [_, 1]),
+    // Row 30-31: lowest leg tips
+    row(32, [SPD, 2], [_, 12], [SPD, 2], [_, 0], [SPD, 2], [_, 12], [SPD, 2]),
+    row(32, [_, 32]),
+  ],
+}
+
+const enemy_wolf: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-5: empty top
+    ...Array(6).fill(row(32, [_, 32])),
+    // Row 6-7: ears
+    row(32, [_, 5], [WFD, 2], [_, 3], [WFD, 2], [_, 20]),
+    row(32, [_, 4], [WFD, 1], [WFM, 2], [_, 1], [WFM, 2], [WFD, 1], [_, 21]),
+    // Row 8-9: head top
+    row(32, [_, 4], [WFD, 1], [WFM, 8], [WFD, 1], [_, 18]),
+    row(32, [_, 4], [WFM, 10], [_, 18]),
+    // Row 10-11: face with eyes
+    row(32, [_, 4], [WFM, 2], [AE, 2], [WFM, 2], [AE, 2], [WFM, 2], [_, 18]),
+    row(32, [_, 4], [WFM, 2], [BK, 2], [WFM, 2], [BK, 2], [WFM, 2], [_, 18]),
+    // Row 12-13: snout
+    row(32, [_, 3], [WFM, 12], [_, 17]),
+    row(32, [_, 2], [WFM, 3], [WFL, 4], [BK, 1], [WFL, 4], [WFM, 2], [_, 16]),
+    // Row 14: jaw with fangs
+    row(32, [_, 3], [WFM, 2], [WH, 1], [DR, 4], [WH, 1], [WFM, 2], [_, 19]),
+    // Row 15-16: neck
+    row(32, [_, 5], [WFM, 10], [WFD, 2], [_, 15]),
+    row(32, [_, 6], [WFM, 4], [WFD, 2], [WFM, 4], [WFD, 2], [_, 14]),
+    // Row 17-19: body front
+    row(32, [_, 8], [WFD, 2], [WFM, 12], [WFD, 2], [_, 8]),
+    row(32, [_, 7], [WFD, 1], [WFM, 4], [WFL, 6], [WFM, 4], [WFD, 1], [_, 9]),
+    row(32, [_, 7], [WFD, 1], [WFM, 3], [WFL, 8], [WFM, 3], [WFD, 1], [_, 9]),
+    // Row 20-21: body mid
+    row(32, [_, 7], [WFD, 1], [WFM, 3], [WFL, 8], [WFM, 3], [WFD, 1], [_, 9]),
+    row(32, [_, 7], [WFD, 1], [WFM, 4], [WFL, 6], [WFM, 4], [WFD, 1], [_, 9]),
+    // Row 22-23: body rear with tail
+    row(32, [_, 8], [WFD, 1], [WFM, 14], [WFD, 1], [_, 8]),
+    row(32, [_, 8], [WFD, 1], [WFM, 12], [WFD, 1], [WFM, 4], [WFD, 2], [_, 4]),
+    // Row 24: tail + haunch
+    row(32, [_, 8], [WFD, 1], [WFM, 12], [WFD, 1], [_, 1], [WFM, 3], [WFD, 1], [WFL, 2], [WFD, 1], [_, 2]),
+    // Row 25: tail tip
+    row(32, [_, 9], [WFM, 12], [_, 2], [WFD, 1], [WFM, 3], [WFD, 1], [_, 4]),
+    // Row 26-27: legs
+    row(32, [_, 8], [WFM, 3], [_, 4], [WFM, 3], [_, 4], [WFM, 3], [_, 7]),
+    row(32, [_, 8], [WFM, 3], [_, 4], [WFM, 3], [_, 4], [WFM, 3], [_, 7]),
+    // Row 28-29: lower legs
+    row(32, [_, 8], [WFD, 3], [_, 4], [WFD, 3], [_, 4], [WFD, 3], [_, 7]),
+    row(32, [_, 8], [WFD, 3], [_, 4], [WFD, 3], [_, 4], [WFD, 3], [_, 7]),
+    // Row 30-31: paws
+    row(32, [_, 7], [BK, 4], [_, 4], [BK, 4], [_, 3], [BK, 4], [_, 6]),
+    row(32, [_, 7], [BK, 4], [_, 4], [BK, 4], [_, 3], [BK, 4], [_, 6]),
+  ],
+}
+
+const enemy_orc: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-2: head top
+    row(32, [_, 11], [OKD, 10], [_, 11]),
+    row(32, [_, 10], [OKD, 12], [_, 10]),
+    row(32, [_, 9], [OKM, 14], [_, 9]),
+    // Row 3-4: brow ridge
+    row(32, [_, 9], [OKD, 2], [OKM, 10], [OKD, 2], [_, 9]),
+    row(32, [_, 9], [OKM, 14], [_, 9]),
+    // Row 5-6: face with eyes
+    row(32, [_, 9], [OKM, 2], [AE, 2], [OKM, 6], [AE, 2], [OKM, 2], [_, 9]),
+    row(32, [_, 9], [OKM, 2], [BK, 2], [OKM, 6], [BK, 2], [OKM, 2], [_, 9]),
+    // Row 7-8: nose and mouth area
+    row(32, [_, 9], [OKM, 5], [OKD, 4], [OKM, 5], [_, 9]),
+    row(32, [_, 9], [OKM, 2], [WH, 2], [OKM, 6], [WH, 2], [OKM, 2], [_, 9]),
+    // Row 9-10: chin/jaw (tusks visible)
+    row(32, [_, 9], [OKM, 1], [WH, 1], [OKM, 10], [WH, 1], [OKM, 1], [_, 9]),
+    row(32, [_, 10], [OKM, 12], [_, 10]),
+    // Row 11-12: neck
+    row(32, [_, 12], [OKM, 8], [_, 12]),
+    row(32, [_, 11], [OKD, 10], [_, 11]),
+    // Row 13-17: armored torso
+    row(32, [_, 9], [BD, 1], [BN, 12], [BD, 1], [_, 9]),
+    row(32, [_, 8], [BD, 1], [BN, 14], [BD, 1], [_, 8]),
+    row(32, [_, 8], [BD, 1], [BN, 6], [AD, 2], [BN, 6], [BD, 1], [_, 8]),
+    row(32, [_, 8], [BD, 1], [BN, 5], [AM, 4], [BN, 5], [BD, 1], [_, 8]),
+    row(32, [_, 8], [BD, 1], [BN, 14], [BD, 1], [_, 8]),
+    // Row 18-20: arms holding weapon
+    row(32, [_, 5], [OKM, 3], [BD, 1], [BN, 14], [BD, 1], [OKM, 3], [_, 5]),
+    row(32, [_, 4], [OKM, 3], [_, 1], [BD, 14], [_, 1], [OKM, 3], [BN, 1], [_, 5]),
+    row(32, [_, 4], [OKL, 2], [_, 2], [BD, 14], [_, 2], [OKL, 2], [BN, 1], [_, 3]),
+    // Row 21: weapon handle
+    row(32, [_, 4], [OKL, 2], [_, 2], [BD, 14], [_, 2], [OKL, 1], [BN, 1], [SM, 2], [_, 2]),
+    // Row 22-24: belt and lower torso
+    row(32, [_, 9], [BK, 14], [_, 9]),
+    row(32, [_, 9], [BD, 5], [GD2, 4], [BD, 5], [_, 9]),
+    row(32, [_, 9], [BK, 14], [_, 9]),
+    // Row 25-28: legs
+    row(32, [_, 10], [OKM, 5], [_, 2], [OKM, 5], [_, 10]),
+    row(32, [_, 10], [OKM, 5], [_, 2], [OKM, 5], [_, 10]),
+    row(32, [_, 10], [OKD, 5], [_, 2], [OKD, 5], [_, 10]),
+    row(32, [_, 10], [OKD, 5], [_, 2], [OKD, 5], [_, 10]),
+    // Row 29-31: boots
+    row(32, [_, 9], [BD, 6], [_, 2], [BD, 6], [_, 9]),
+    row(32, [_, 9], [BD, 6], [_, 2], [BD, 6], [_, 9]),
+    row(32, [_, 9], [BK, 6], [_, 2], [BK, 6], [_, 9]),
+  ],
+}
+
+const enemy_zombie: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-2: messy hair/head top
+    row(32, [_, 11], [HD, 3], [_, 2], [HD, 3], [_, 13]),
+    row(32, [_, 10], [HD, 2], [ZSM, 8], [HD, 2], [_, 10]),
+    row(32, [_, 9], [HD, 1], [ZSM, 12], [HD, 1], [_, 9]),
+    // Row 3-4: forehead
+    row(32, [_, 9], [ZSM, 14], [_, 9]),
+    row(32, [_, 9], [ZSD, 2], [ZSM, 10], [ZSD, 2], [_, 9]),
+    // Row 5-6: face with hollow eyes
+    row(32, [_, 9], [ZSM, 2], [BK, 3], [ZSM, 4], [BK, 3], [ZSM, 2], [_, 9]),
+    row(32, [_, 9], [ZSM, 2], [BK, 3], [ZSM, 4], [BK, 3], [ZSM, 2], [_, 9]),
+    // Row 7-8: nose and mouth (gaping)
+    row(32, [_, 9], [ZSM, 5], [ZSD, 4], [ZSM, 5], [_, 9]),
+    row(32, [_, 9], [ZSM, 3], [BK, 1], [ZSD, 6], [BK, 1], [ZSM, 3], [_, 9]),
+    // Row 9-10: jaw
+    row(32, [_, 10], [ZSM, 12], [_, 10]),
+    row(32, [_, 12], [ZSD, 8], [_, 12]),
+    // Row 11: neck (thin, tilted)
+    row(32, [_, 12], [ZSD, 4], [BW, 2], [ZSD, 2], [_, 12]),
+    // Row 12-13: shoulders (slouched)
+    row(32, [_, 8], [ZCL, 2], [_, 1], [ZCL, 10], [_, 1], [ZCL, 2], [_, 8]),
+    row(32, [_, 8], [ZCL, 16], [_, 8]),
+    // Row 14-17: torn torso clothing
+    row(32, [_, 8], [ZCL, 6], [_, 2], [ZCL, 8], [_, 8]),
+    row(32, [_, 8], [ZCL, 5], [ZSD, 3], [ZCL, 8], [_, 8]),
+    row(32, [_, 8], [ZCL, 4], [ZSD, 4], [ZCL, 8], [_, 8]),
+    row(32, [_, 8], [ZCL, 16], [_, 8]),
+    // Row 18-20: arms reaching forward
+    row(32, [_, 3], [ZSM, 4], [ZSD, 2], [ZCL, 14], [_, 2], [ZSM, 3], [_, 4]),
+    row(32, [_, 2], [ZSM, 3], [_, 4], [ZCL, 14], [_, 4], [ZSM, 2], [_, 3]),
+    row(32, [_, 1], [ZSD, 3], [_, 5], [ZCL, 12], [_, 5], [ZSD, 3], [_, 3]),
+    // Row 21-22: hands (bony fingers)
+    row(32, [BW, 2], [ZSD, 1], [_, 6], [ZCL, 12], [_, 6], [ZSD, 1], [BW, 2], [_, 2]),
+    row(32, [_, 32]),
+    // Row 23-24: belt/waist
+    row(32, [_, 10], [BD, 12], [_, 10]),
+    row(32, [_, 10], [ZCL, 12], [_, 10]),
+    // Row 25-28: legs (shambling)
+    row(32, [_, 10], [ZCL, 5], [_, 3], [ZCL, 4], [_, 10]),
+    row(32, [_, 10], [ZSD, 5], [_, 3], [ZSD, 4], [_, 10]),
+    row(32, [_, 10], [ZSD, 5], [_, 3], [ZSD, 4], [_, 10]),
+    row(32, [_, 10], [ZSD, 5], [_, 4], [ZSD, 4], [_, 9]),
+    // Row 29-31: feet (dragging)
+    row(32, [_, 9], [BD, 6], [_, 4], [BD, 5], [_, 8]),
+    row(32, [_, 9], [BD, 6], [_, 5], [BD, 5], [_, 7]),
+    row(32, [_, 9], [BD, 7], [_, 5], [BD, 5], [_, 6]),
+  ],
+}
+
+const enemy_ghost: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-2: empty top
+    ...Array(3).fill(row(32, [_, 32])),
+    // Row 3-5: head top (ethereal glow)
+    row(32, [_, 13], [GHL, 6], [_, 13]),
+    row(32, [_, 11], [GHL, 2], [GHM, 6], [GHL, 2], [_, 11]),
+    row(32, [_, 10], [GHL, 1], [GHM, 10], [GHL, 1], [_, 10]),
+    // Row 6-8: face
+    row(32, [_, 9], [GHL, 1], [GHM, 12], [GHL, 1], [_, 9]),
+    row(32, [_, 9], [GHM, 3], [BK, 3], [GHM, 2], [BK, 3], [GHM, 3], [_, 9]),
+    row(32, [_, 9], [GHM, 3], [BK, 3], [GHM, 2], [BK, 3], [GHM, 3], [_, 9]),
+    // Row 9-10: mouth area
+    row(32, [_, 9], [GHM, 5], [BK, 4], [GHM, 5], [_, 9]),
+    row(32, [_, 9], [GHL, 1], [GHM, 12], [GHL, 1], [_, 9]),
+    // Row 11-13: upper body
+    row(32, [_, 8], [GHL, 1], [GHM, 14], [GHL, 1], [_, 8]),
+    row(32, [_, 8], [GHM, 16], [_, 8]),
+    row(32, [_, 7], [GHL, 1], [GHM, 16], [GHL, 1], [_, 7]),
+    // Row 14-16: arms spreading ghostly
+    row(32, [_, 5], [GHL, 2], [GHM, 18], [GHL, 2], [_, 5]),
+    row(32, [_, 4], [GHL, 2], [GHM, 6], [GHD, 4], [GHM, 6], [GHL, 2], [_, 8]),
+    row(32, [_, 5], [GHL, 1], [GHM, 18], [GHL, 1], [_, 7]),
+    // Row 17-19: body
+    row(32, [_, 6], [GHM, 18], [_, 8]),
+    row(32, [_, 7], [GHL, 1], [GHM, 16], [_, 8]),
+    row(32, [_, 7], [GHM, 16], [GHL, 1], [_, 8]),
+    // Row 20-22: fading body
+    row(32, [_, 8], [GHM, 14], [_, 10]),
+    row(32, [_, 9], [GHM, 12], [GHL, 1], [_, 10]),
+    row(32, [_, 9], [GHL, 1], [GHM, 10], [GHL, 1], [_, 11]),
+    // Row 23-25: wispy taper
+    row(32, [_, 10], [GHM, 10], [_, 12]),
+    row(32, [_, 11], [GHL, 1], [GHM, 6], [GHL, 1], [_, 13]),
+    row(32, [_, 12], [GHM, 6], [_, 14]),
+    // Row 26-28: wispy tail getting thinner
+    row(32, [_, 13], [GHL, 1], [GHM, 4], [_, 14]),
+    row(32, [_, 14], [GHM, 2], [GHL, 1], [_, 15]),
+    row(32, [_, 14], [GHL, 1], [GHM, 2], [_, 15]),
+    // Row 29-31: final wisps
+    row(32, [_, 15], [GHL, 2], [_, 15]),
+    row(32, [_, 16], [GHL, 1], [_, 15]),
+    row(32, [_, 32]),
+  ],
+}
+
+const enemy_snake: SpriteData = {
+  width: 32, height: 32,
+  pixels: [
+    // Row 0-4: empty top space
+    ...Array(5).fill(row(32, [_, 32])),
+    // Row 5-6: tongue and head top
+    row(32, [_, 6], [RE, 1], [_, 1], [RE, 1], [_, 23]),
+    row(32, [_, 7], [RE, 2], [_, 23]),
+    // Row 7-8: head
+    row(32, [_, 6], [NKD, 2], [NKM, 4], [NKD, 2], [_, 18]),
+    row(32, [_, 5], [NKD, 1], [NKM, 2], [AE, 1], [NKM, 2], [AE, 1], [NKM, 2], [NKD, 1], [_, 17]),
+    // Row 9-10: head sides and neck
+    row(32, [_, 5], [NKD, 1], [NKM, 8], [NKD, 1], [_, 17]),
+    row(32, [_, 6], [NKD, 1], [NKM, 6], [NKD, 1], [_, 18]),
+    // Row 11-12: neck curving into coil
+    row(32, [_, 7], [NKD, 1], [NKM, 4], [NKD, 1], [_, 19]),
+    row(32, [_, 8], [NKD, 1], [NKM, 4], [NKD, 1], [_, 18]),
+    // Row 13-14: coil top layer
+    row(32, [_, 9], [NKD, 1], [NKM, 12], [NKD, 1], [_, 9]),
+    row(32, [_, 8], [NKD, 1], [NKM, 4], [NKD, 2], [NKM, 4], [NKD, 2], [NKM, 2], [NKD, 1], [_, 8]),
+    // Row 15-16: upper coil body
+    row(32, [_, 7], [NKD, 1], [NKM, 3], [NKD, 1], [_, 4], [NKD, 1], [NKM, 4], [NKD, 1], [_, 2], [NKD, 1], [NKM, 3], [NKD, 1], [_, 3]),
+    row(32, [_, 7], [NKD, 1], [NKY, 3], [NKD, 1], [_, 4], [NKD, 1], [NKY, 4], [NKD, 1], [_, 2], [NKD, 1], [NKY, 3], [NKD, 1], [_, 2]),
+    // Row 17-18: mid coil
+    row(32, [_, 7], [NKD, 1], [NKM, 3], [NKD, 1], [_, 4], [NKD, 1], [NKM, 4], [NKD, 1], [_, 2], [NKD, 1], [NKM, 3], [NKD, 1], [_, 2]),
+    row(32, [_, 8], [NKD, 1], [NKM, 3], [NKD, 1], [_, 2], [NKD, 1], [NKM, 4], [NKD, 1], [_, 3], [NKD, 1], [NKM, 2], [NKD, 1], [_, 3]),
+    // Row 19-20: lower coil visible
+    row(32, [_, 9], [NKD, 1], [NKM, 3], [NKD, 1], [NKM, 6], [NKD, 1], [NKM, 2], [NKD, 1], [_, 7]),
+    row(32, [_, 9], [NKD, 1], [NKY, 3], [NKD, 1], [NKY, 6], [NKD, 1], [NKY, 2], [NKD, 1], [_, 7]),
+    // Row 21-22: coil body
+    row(32, [_, 8], [NKD, 1], [NKM, 14], [NKD, 1], [_, 8]),
+    row(32, [_, 8], [NKD, 1], [NKM, 3], [NKD, 2], [NKM, 4], [NKD, 2], [NKM, 3], [NKD, 1], [_, 8]),
+    // Row 23-24: coil bottom layers
+    row(32, [_, 9], [NKD, 1], [NKM, 12], [NKD, 1], [_, 9]),
+    row(32, [_, 9], [NKD, 1], [NKY, 12], [NKD, 1], [_, 9]),
+    // Row 25-26: base coil
+    row(32, [_, 10], [NKD, 1], [NKM, 10], [NKD, 1], [_, 10]),
+    row(32, [_, 10], [NKD, 1], [NKM, 3], [NKD, 2], [NKM, 3], [NKD, 1], [_, 12]),
+    // Row 27-28: tail tip emerging
+    row(32, [_, 11], [NKD, 1], [NKM, 6], [NKD, 1], [_, 13]),
+    row(32, [_, 12], [NKD, 1], [NKM, 4], [NKD, 1], [_, 14]),
+    // Row 29-30: tail point
+    row(32, [_, 13], [NKD, 1], [NKM, 2], [NKD, 1], [_, 15]),
+    row(32, [_, 14], [NKD, 2], [_, 16]),
+    // Row 31: empty
+    row(32, [_, 32]),
   ],
 }
 
@@ -1559,6 +1885,12 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   enemy_slime,
   enemy_bat,
   enemy_goblin,
+  enemy_spider,
+  enemy_wolf,
+  enemy_orc,
+  enemy_zombie,
+  enemy_ghost,
+  enemy_snake,
   // NPCs
   npc_villager,
   npc_merchant,
