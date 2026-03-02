@@ -37,4 +37,39 @@ router.post('/api/voice/tts', async (req, res) => {
   }
 })
 
+router.post('/api/voice/sfx', async (req, res) => {
+  const apiKey = (req.headers['x-elevenlabs-key'] as string) || process.env.ELEVENLABS_API_KEY
+  if (!apiKey) {
+    return res.status(503).json({ error: 'ELEVENLABS_API_KEY not configured' })
+  }
+
+  const { text, duration_seconds = 1.5, prompt_influence = 0.5 } = req.body
+
+  try {
+    const response = await fetch('https://api.elevenlabs.io/v1/sound-generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'xi-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        text,
+        duration_seconds,
+        prompt_influence,
+      }),
+    })
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: 'SFX generation failed' })
+    }
+
+    res.set('Content-Type', 'audio/mpeg')
+    const buffer = await response.arrayBuffer()
+    res.send(Buffer.from(buffer))
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    res.status(500).json({ error: message })
+  }
+})
+
 export default router

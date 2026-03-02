@@ -32,6 +32,7 @@ import { SPRITE_REGISTRY } from './assets/sprites'
 import { MistralClient } from './ai/mistral-client'
 import { ToolExecutor } from './ai/tool-executor'
 import { VoiceService } from './ai/voice'
+import { SfxService } from './ai/sfx'
 import { categorizeEntity } from './systems/layer-manager'
 import type { SavedEntityState, LayerDefinition } from './systems/layer-manager'
 import type { ItemDef, PickupComponent, ConsumableComponent, VoiceLineComponent, ChestComponent, AnyComponent } from './ecs/types'
@@ -68,10 +69,12 @@ const combatSystem = new CombatSystem(healthSystem, input, lootManager)
 const doorSystem = new DoorSystem()
 const moveToSystem = new MoveToSystem()
 
-// Wire VFX
+// Wire VFX + SFX
+const sfxService = new SfxService()
 renderer.setVFX(vfx)
 renderer.setCombatSystem(combatSystem)
 combatSystem.setVFX(vfx)
+combatSystem.setSFX(sfxService)
 healthSystem.setVFX(vfx)
 
 // Wire layer manager to systems
@@ -84,6 +87,7 @@ healthSystem.setOnEntityDeath((entityId, pos, assetId) => {
   const layerComp = entity?.components.get('layer') as import('./ecs/types').LayerComponent | undefined
   const layerId = layerComp?.layerId ?? 'default'
   combatSystem.spawnLootDrop(world, pos.x, pos.y, assetId, layerId)
+  sfxService.play('death')
 })
 
 // Wire NPC voice lines
@@ -124,6 +128,14 @@ if (_autosave) {
     if (hero) {
       player = hero.id
       _restoredOk = true
+
+      // Fix stale custom sprites: if the hero's assetId isn't in the sprite cache
+      // (e.g. custom character from pixel editor that only existed at runtime),
+      // reset to default hero_knight so it doesn't render as an orange box.
+      const heroSprite = hero.components.get('sprite') as import('./ecs/types').SpriteComponent | undefined
+      if (heroSprite && !renderer.getSpriteCanvas(heroSprite.assetId)) {
+        heroSprite.assetId = 'hero_knight'
+      }
     } else {
       console.warn('Autosave had no hero entity, starting fresh')
       localStorage.removeItem('mistral-maker-autosave')

@@ -9,6 +9,7 @@ import { HealthSystem } from './health'
 import { InputSystem } from './input'
 import { LootTableManager } from '../data/loot-tables'
 import type { VFXSystem } from './vfx'
+import type { SfxService } from '../ai/sfx'
 import type { Collision } from './physics'
 
 /** Collect all active item effects from a entity's equipment slots. */
@@ -72,6 +73,7 @@ export class CombatSystem {
   private controlledEntityId: string | null = null
   private respawnQueue: RespawnEntry[] = []
   private vfx: VFXSystem | null = null
+  private sfx: SfxService | null = null
   private poisonDots: PoisonDot[] = []
   private poisonTickAccumulators = new Map<string, number>()
 
@@ -82,6 +84,7 @@ export class CombatSystem {
   ) {}
 
   setVFX(vfx: VFXSystem): void { this.vfx = vfx }
+  setSFX(sfx: SfxService): void { this.sfx = sfx }
 
   getCooldownFraction(entityId: string): number {
     const cd = this.attackCooldowns.get(entityId)
@@ -277,11 +280,12 @@ export class CombatSystem {
       const attackX = dir === 'right' ? pos.x + sprite.width : pos.x - range
       const attackY = pos.y
 
-      // VFX: slash arc + weapon swing
+      // VFX + SFX: slash arc + weapon swing
       const arcX = dir === 'right' ? pos.x + sprite.width : pos.x
       const arcY = pos.y + sprite.height / 2
       this.vfx?.addSlashArc(arcX, arcY, dir === 'right' ? 'right' : 'left', range)
       this.vfx?.addWeaponSwing(attackerId, dir === 'right' ? 'right' : 'left')
+      this.sfx?.play('sword_swing')
 
       // Get attacker's layer for filtering
       const attackerLayer = (world.getComponent(attackerId, 'layer') as LayerComponent | undefined)?.layerId ?? 'default'
@@ -334,6 +338,7 @@ export class CombatSystem {
     const dodgeChance = getEquipDodgeChance(world, targetId)
     if (dodgeChance > 0 && Math.random() < dodgeChance) {
       this.vfx?.addMissText(tPos.x + tSprite.width / 2, tPos.y)
+      this.sfx?.play('dodge')
       return
     }
 
@@ -347,8 +352,10 @@ export class CombatSystem {
     if (hit) {
       if (isCrit) {
         this.vfx?.addCritNumber(tPos.x + tSprite.width / 2, tPos.y, reducedDamage)
+        this.sfx?.play('crit_hit')
       } else {
         this.vfx?.addDamageNumber(tPos.x + tSprite.width / 2, tPos.y, reducedDamage)
+        this.sfx?.play('hit')
       }
 
       // Lifesteal
