@@ -1342,6 +1342,10 @@ chatPanel.onMicPress = async () => {
   }
 }
 
+chatPanel.onMicStop = () => {
+  voiceService.stopListening()
+}
+
 chatPanel.onSend = async (text) => {
   chatPanel.addMessage('assistant', 'Thinking...')
   toolbar.setConnectionStatus('processing')

@@ -898,10 +898,25 @@ select.editor-input:focus {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.chat-overlay-mic {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .chat-overlay-mic.recording {
-  background: rgba(197, 48, 48, 0.6);
-  border-color: rgba(197, 48, 48, 0.8);
+  background: rgba(197, 48, 48, 0.7);
+  border-color: rgba(197, 48, 48, 0.9);
   color: #fff;
+  padding: 5px 10px;
+}
+
+.mic-rec-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4444;
+  display: inline-block;
   animation: recording-pulse 1s ease infinite;
 }
 

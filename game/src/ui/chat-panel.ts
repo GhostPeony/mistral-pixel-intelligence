@@ -1,6 +1,7 @@
 export class ChatPanel {
   onSend: ((text: string) => void) | null = null
   onMicPress: (() => void) | null = null
+  onMicStop: (() => void) | null = null
 
   private el: HTMLElement
   private body: HTMLElement
@@ -9,6 +10,7 @@ export class ChatPanel {
   private micBtn: HTMLButtonElement
   private tab: HTMLElement
   private _isOpen = true
+  private _isRecording = false
 
   constructor(parent: HTMLElement) {
     // Wrapper positioned inside canvas-container
@@ -43,9 +45,15 @@ export class ChatPanel {
 
     this.micBtn = document.createElement('button')
     this.micBtn.className = 'chat-overlay-btn chat-overlay-mic'
-    this.micBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z" fill="currentColor"/><path d="M4 6.5a.5.5 0 0 0-1 0V7a5 5 0 0 0 4.5 4.975V14H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-2.025A5 5 0 0 0 13 7v-.5a.5.5 0 0 0-1 0V7a4 4 0 1 1-8 0v-.5z" fill="currentColor"/></svg>'
+    this.micBtn.innerHTML = this.micIdleHTML()
     this.micBtn.title = 'Voice input'
-    this.micBtn.addEventListener('click', () => this.onMicPress?.())
+    this.micBtn.addEventListener('click', () => {
+      if (this._isRecording) {
+        this.onMicStop?.()
+      } else {
+        this.onMicPress?.()
+      }
+    })
 
     const sendBtn = document.createElement('button')
     sendBtn.className = 'chat-overlay-btn chat-overlay-send'
@@ -119,14 +127,27 @@ export class ChatPanel {
   }
 
   setMicRecording(active: boolean): void {
+    this._isRecording = active
     if (active) {
       this.micBtn.classList.add('recording')
+      this.micBtn.innerHTML = this.micRecordingHTML()
+      this.micBtn.title = 'Stop recording'
     } else {
       this.micBtn.classList.remove('recording')
+      this.micBtn.innerHTML = this.micIdleHTML()
+      this.micBtn.title = 'Voice input'
     }
   }
 
   // --- Private ---
+
+  private micIdleHTML(): string {
+    return '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a2 2 0 0 0-2 2v4a2 2 0 1 0 4 0V3a2 2 0 0 0-2-2z" fill="currentColor"/><path d="M4 6.5a.5.5 0 0 0-1 0V7a5 5 0 0 0 4.5 4.975V14H6a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1H8.5v-2.025A5 5 0 0 0 13 7v-.5a.5.5 0 0 0-1 0V7a4 4 0 1 1-8 0v-.5z" fill="currentColor"/></svg>'
+  }
+
+  private micRecordingHTML(): string {
+    return '<span class="mic-rec-dot"></span><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" fill="currentColor"/></svg> Stop'
+  }
 
   private send(): void {
     const text = this.inputArea.value.trim()

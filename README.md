@@ -4,6 +4,45 @@ A self-improving pixel platformer where AI learns taste from player feedback. Yo
 
 Built for the **Mistral Worldwide Hackathon** by [Ghost Peony](https://github.com/GhostPeony).
 
+![Mistral Maker: The Self-Improving AI Game Engine](QBit.jpg)
+
+---
+
+## The Game
+
+Mistral Maker is a **prompt-driven level builder** with a playable platformer inside it. You describe what you want in plain English (or speak it), and the AI builds it in real time on a pixel canvas. Then you switch to play mode and run through what you just made.
+
+### Build Mode
+
+You're looking at a 2D canvas. On the left is a sprite palette — tiles, enemies, items, decorations. On the right is a property inspector for whatever you've selected. At the bottom is a chat panel where you talk to Mistral.
+
+**What you can do:**
+
+- **Prompt the AI** — Type or speak: *"Build a castle entrance with two skeleton guards and a locked door."* Mistral responds with tool calls that spawn entities, set positions, add patrol routes, and wire up behaviors. You watch the level assemble itself.
+- **Critique and reshape** — Don't like the placement? Say *"Move the guards further apart and add a potion behind the pillar."* The AI adjusts. Or just drag things yourself — click, drag, resize, delete, clone with Shift+click.
+- **Layer system** — Levels have multiple layers connected by doors. Build a platformer dungeon, then add a topdown overworld through a portal. Each layer has its own physics mode.
+- **NPC authoring** — Enemies and NPCs get patrol routes (click to place waypoints) and behavior rules. A guard can `on_proximity 120 → move_towards player 60` and `on_collision player → hurt other 1`. The AI writes these rules; you can also edit them directly.
+- **Voice** — Every NPC speaks out loud. The AI assigns voice profiles when spawning characters — guards sound authoritative, healers sound warm, merchants sound persuasive. Six ElevenLabs voice profiles, real-time TTS. You can also speak your prompts instead of typing.
+
+### Play Mode
+
+Press the mode toggle and you're in the game. Your character spawns, gravity kicks in (or doesn't — topdown layers are 8-directional), and everything you built is live.
+
+- **Movement**: WASD or arrow keys. Jump with Space (double-jump enabled). Attack with X. Pick up items with F.
+- **Combat**: Enemies patrol their routes and attack on proximity. Melee strikes produce slash arcs and damage numbers. Kill enemies to get loot drops from configurable drop tables.
+- **Inventory**: Open your backpack (B/I) to see collected items. Equip weapons, armor, and accessories into slots. Consumables (potions, food) auto-apply on pickup — heal, speed boost, ammo, score.
+- **Doors**: Walk into a portal and you transition to another layer with a smooth animation. Doors can be bidirectional or one-way. The AI links them automatically when you ask for connected areas.
+- **Health**: Take damage, get knocked back with invulnerability frames. Die and respawn at your spawn point after a delay. Hearts display in the HUD.
+
+### The Feedback Loop
+
+After the AI builds something, a **"Looks Good"** button appears. That's the moment the system captures a training trace:
+
+- If you approve immediately → **Success trace** (SFT data). The AI got it right.
+- If you critique first, then approve → **Correction trace** (DPO data). The system records what was rejected and what was chosen.
+
+Every trace gets scored on 7 dimensions, classified into tiers (gold/silver/bronze), and fed into the training pipeline. The more you play, the better the AI gets at building levels that match your taste.
+
 ---
 
 ## How It Works
