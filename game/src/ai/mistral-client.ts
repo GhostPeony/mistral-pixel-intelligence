@@ -156,7 +156,7 @@ export class MistralClient {
 
     return {
       toolCalls,
-      textContent: choice.content ?? '',
+      textContent: contentStr,
       stopReason: data.choices?.[0]?.finish_reason ?? 'stop',
       modelId: data.modelId ?? data.model ?? 'unknown',
       routingDecision: data.routingDecision,
