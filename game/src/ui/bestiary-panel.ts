@@ -18,159 +18,172 @@ const PICKUP_ASSETS = [
 ]
 
 export class BestiaryPanel {
-  private container: HTMLElement
   private lootManager: LootTableManager
   private renderer: Renderer
-  private modalBackdrop: HTMLElement | null = null
+  private backdrop: HTMLElement | null = null
+  private selectedEnemy: string | null = null
 
-  constructor(container: HTMLElement, lootManager: LootTableManager, renderer: Renderer) {
+  constructor(lootManager: LootTableManager, renderer: Renderer) {
     this.lootManager = lootManager
     this.renderer = renderer
+  }
 
-    this.container = document.createElement('div')
-    this.container.className = 'bestiary-panel'
-    container.appendChild(this.container)
+  get isOpen(): boolean {
+    return this.backdrop !== null
   }
 
   toggle(): void {
-    this.container.classList.toggle('visible')
-    if (this.container.classList.contains('visible')) {
-      this.render()
+    if (this.backdrop) this.close()
+    else this.open()
+  }
+
+  open(): void {
+    this.close()
+    this.selectedEnemy = null
+
+    // Backdrop
+    this.backdrop = document.createElement('div')
+    this.backdrop.className = 'bestiary-backdrop'
+    this.backdrop.addEventListener('click', (e) => {
+      if (e.target === this.backdrop) this.close()
+    })
+
+    // Modal container
+    const modal = document.createElement('div')
+    modal.className = 'bestiary-modal-container'
+
+    // Header
+    const header = document.createElement('div')
+    header.className = 'bestiary-header'
+
+    const title = document.createElement('h2')
+    title.className = 'bestiary-title'
+    title.textContent = 'Bestiary'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'bestiary-close-btn'
+    closeBtn.textContent = '\u00d7'
+    closeBtn.addEventListener('click', () => this.close())
+
+    header.appendChild(title)
+    header.appendChild(closeBtn)
+    modal.appendChild(header)
+
+    // Content area (scrollable)
+    const content = document.createElement('div')
+    content.className = 'bestiary-content'
+    content.id = 'bestiary-content'
+    modal.appendChild(content)
+
+    this.backdrop.appendChild(modal)
+    document.body.appendChild(this.backdrop)
+
+    this.renderContent()
+
+    // Escape to close
+    const escHandler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        this.close()
+        window.removeEventListener('keydown', escHandler)
+      }
+    }
+    window.addEventListener('keydown', escHandler)
+  }
+
+  close(): void {
+    if (this.backdrop) {
+      this.backdrop.remove()
+      this.backdrop = null
+      this.selectedEnemy = null
     }
   }
 
-  render(): HTMLElement {
-    this.container.innerHTML = ''
+  private renderContent(): void {
+    const content = this.backdrop?.querySelector('#bestiary-content') as HTMLElement | null
+    if (!content) return
+    content.innerHTML = ''
 
-    const header = document.createElement('h2')
-    header.className = 'panel-header'
-    header.textContent = 'Bestiary'
-    this.container.appendChild(header)
-
+    // Sprite grid
     const grid = document.createElement('div')
     grid.className = 'bestiary-grid'
 
     for (const enemyId of ENEMY_ASSET_IDS) {
-      const card = this.createEnemyCard(enemyId)
-      grid.appendChild(card)
+      const cell = document.createElement('div')
+      cell.className = 'bestiary-cell' + (this.selectedEnemy === enemyId ? ' bestiary-cell-selected' : '')
+
+      // Sprite thumbnail
+      const thumb = document.createElement('canvas')
+      thumb.width = 32
+      thumb.height = 32
+      const spriteCanvas = this.renderer.getSpriteCanvas(enemyId)
+      if (spriteCanvas) {
+        const ctx = thumb.getContext('2d')!
+        ctx.imageSmoothingEnabled = false
+        ctx.drawImage(spriteCanvas, 0, 0, 32, 32)
+      }
+      cell.appendChild(thumb)
+
+      // Customized dot
+      if (this.lootManager.hasCustomTable(enemyId)) {
+        const dot = document.createElement('span')
+        dot.className = 'bestiary-cell-dot'
+        dot.title = 'Customized'
+        cell.appendChild(dot)
+      }
+
+      cell.addEventListener('click', () => {
+        this.selectedEnemy = this.selectedEnemy === enemyId ? null : enemyId
+        this.renderContent()
+      })
+
+      grid.appendChild(cell)
     }
 
-    this.container.appendChild(grid)
-    return this.container
-  }
+    content.appendChild(grid)
 
-  private createEnemyCard(enemyId: string): HTMLElement {
-    const card = document.createElement('button')
-    card.className = 'bestiary-card'
+    // Detail panel below grid
+    if (this.selectedEnemy) {
+      const table = this.lootManager.getTable(this.selectedEnemy)
+      if (table) {
+        const detail = document.createElement('div')
+        detail.className = 'bestiary-detail'
 
-    // Thumbnail
-    const thumb = document.createElement('canvas')
-    thumb.width = 32
-    thumb.height = 32
-    thumb.className = 'bestiary-card-thumb'
-    const spriteCanvas = this.renderer.getSpriteCanvas(enemyId)
-    if (spriteCanvas) {
-      const ctx = thumb.getContext('2d')!
-      ctx.imageSmoothingEnabled = false
-      ctx.drawImage(spriteCanvas, 0, 0, 32, 32)
+        const name = document.createElement('div')
+        name.className = 'bestiary-detail-name'
+        name.textContent = this.formatEnemyName(this.selectedEnemy)
+        detail.appendChild(name)
+
+        const editor = this.createDropTableEditor(this.selectedEnemy, table)
+        detail.appendChild(editor)
+
+        content.appendChild(detail)
+      }
+    } else {
+      const hint = document.createElement('div')
+      hint.className = 'bestiary-detail-hint'
+      hint.textContent = 'Select a creature'
+      content.appendChild(hint)
     }
-    card.appendChild(thumb)
-
-    // Name
-    const name = document.createElement('span')
-    name.className = 'bestiary-card-name'
-    name.textContent = this.formatEnemyName(enemyId)
-    card.appendChild(name)
-
-    // Customized indicator
-    if (this.lootManager.hasCustomTable(enemyId)) {
-      const badge = document.createElement('span')
-      badge.className = 'bestiary-card-badge'
-      badge.textContent = '\u2022'
-      card.appendChild(badge)
-    }
-
-    card.addEventListener('click', () => this.openModal(enemyId))
-    return card
   }
 
-  private formatEnemyName(assetId: string): string {
-    return assetId
-      .replace('enemy_', '')
-      .replace('boss_', '')
-      .split('_')
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ')
-  }
-
-  private openModal(enemyId: string): void {
-    this.closeModal()
-
-    const table = this.lootManager.getTable(enemyId)
-    if (!table) return
+  private createDropTableEditor(
+    enemyId: string,
+    table: { dropChance: number; entries: LootEntry[] },
+  ): HTMLElement {
+    const editor = document.createElement('div')
+    editor.className = 'bestiary-editor'
 
     let draftDropChance = table.dropChance
     let draftEntries = table.entries.map(e => ({ ...e }))
 
-    // Backdrop
-    this.modalBackdrop = document.createElement('div')
-    this.modalBackdrop.className = 'bestiary-modal-backdrop'
-    this.modalBackdrop.addEventListener('click', (e) => {
-      if (e.target === this.modalBackdrop) this.closeModal()
-    })
-
-    // Modal
-    const modal = document.createElement('div')
-    modal.className = 'bestiary-modal'
-
-    // Header
-    const header = document.createElement('div')
-    header.className = 'bestiary-modal-header'
-
-    const thumb = document.createElement('canvas')
-    thumb.width = 48
-    thumb.height = 48
-    thumb.className = 'bestiary-modal-thumb'
-    const spriteCanvas = this.renderer.getSpriteCanvas(enemyId)
-    if (spriteCanvas) {
-      const ctx = thumb.getContext('2d')!
-      ctx.imageSmoothingEnabled = false
-      ctx.drawImage(spriteCanvas, 0, 0, 48, 48)
-    }
-    header.appendChild(thumb)
-
-    const headerText = document.createElement('div')
-    headerText.className = 'bestiary-modal-header-text'
-
-    const title = document.createElement('h3')
-    title.className = 'bestiary-modal-title'
-    title.textContent = this.formatEnemyName(enemyId)
-    headerText.appendChild(title)
-
-    if (this.lootManager.hasCustomTable(enemyId)) {
-      const badge = document.createElement('span')
-      badge.className = 'bestiary-custom-badge'
-      badge.textContent = 'Customized'
-      headerText.appendChild(badge)
-    }
-
-    header.appendChild(headerText)
-
-    const closeBtn = document.createElement('button')
-    closeBtn.className = 'bestiary-modal-close'
-    closeBtn.textContent = '\u00d7'
-    closeBtn.addEventListener('click', () => this.closeModal())
-    header.appendChild(closeBtn)
-
-    modal.appendChild(header)
-
-    // Drop chance slider
-    const chanceGroup = document.createElement('div')
-    chanceGroup.className = 'bestiary-setting-group'
+    // --- Drop Chance ---
+    const chanceRow = document.createElement('div')
+    chanceRow.className = 'bestiary-editor-section'
 
     const chanceLabel = document.createElement('label')
+    chanceLabel.className = 'bestiary-editor-label'
     chanceLabel.textContent = `Drop Chance: ${Math.round(draftDropChance * 100)}%`
-    chanceGroup.appendChild(chanceLabel)
+    chanceRow.appendChild(chanceLabel)
 
     const chanceSlider = document.createElement('input')
     chanceSlider.type = 'range'
@@ -182,14 +195,15 @@ export class BestiaryPanel {
       draftDropChance = parseInt(chanceSlider.value) / 100
       chanceLabel.textContent = `Drop Chance: ${chanceSlider.value}%`
     })
-    chanceGroup.appendChild(chanceSlider)
-    modal.appendChild(chanceGroup)
+    chanceRow.appendChild(chanceSlider)
+    editor.appendChild(chanceRow)
 
-    // Loot entries
+    // --- Loot Table ---
     const lootSection = document.createElement('div')
-    lootSection.className = 'bestiary-loot-section'
+    lootSection.className = 'bestiary-editor-section'
 
     const lootLabel = document.createElement('label')
+    lootLabel.className = 'bestiary-editor-label'
     lootLabel.textContent = 'Loot Table'
     lootSection.appendChild(lootLabel)
 
@@ -204,13 +218,15 @@ export class BestiaryPanel {
         empty.textContent = 'No loot entries'
         lootList.appendChild(empty)
       } else {
+        const totalWeight = draftEntries.reduce((sum, e) => sum + e.weight, 0)
         for (let i = 0; i < draftEntries.length; i++) {
           const entry = draftEntries[i]
-          const row = this.createLootRow(entry, () => {
+          const row = this.createLootRow(entry, totalWeight, () => {
             draftEntries.splice(i, 1)
             renderLootList()
           }, (updated) => {
             draftEntries[i] = updated
+            renderLootList()
           })
           lootList.appendChild(row)
         }
@@ -219,9 +235,9 @@ export class BestiaryPanel {
     renderLootList()
     lootSection.appendChild(lootList)
 
-    // Add loot button
+    // Add Loot button
     const addBtn = document.createElement('button')
-    addBtn.className = 'bestiary-add-entry-btn'
+    addBtn.className = 'bestiary-add-btn'
     addBtn.textContent = '+ Add Loot'
     addBtn.addEventListener('click', () => {
       this.showAddLootForm(lootSection, (entry) => {
@@ -231,23 +247,22 @@ export class BestiaryPanel {
     })
     lootSection.appendChild(addBtn)
 
-    modal.appendChild(lootSection)
+    editor.appendChild(lootSection)
 
-    // Actions
+    // --- Actions ---
     const actions = document.createElement('div')
-    actions.className = 'bestiary-modal-actions'
+    actions.className = 'bestiary-editor-actions'
 
     const resetBtn = document.createElement('button')
-    resetBtn.className = 'bestiary-modal-btn bestiary-modal-btn-reset'
-    resetBtn.textContent = 'Reset to Default'
+    resetBtn.className = 'bestiary-action-btn bestiary-action-reset'
+    resetBtn.textContent = 'Reset'
     resetBtn.addEventListener('click', () => {
       this.lootManager.resetToDefault(enemyId)
-      this.closeModal()
-      this.render()
+      this.renderContent()
     })
 
     const saveBtn = document.createElement('button')
-    saveBtn.className = 'bestiary-modal-btn bestiary-modal-btn-save'
+    saveBtn.className = 'bestiary-action-btn bestiary-action-save'
     saveBtn.textContent = 'Save'
     saveBtn.addEventListener('click', () => {
       this.lootManager.setCustomTable({
@@ -255,42 +270,26 @@ export class BestiaryPanel {
         dropChance: draftDropChance,
         entries: draftEntries,
       })
-      this.closeModal()
-      this.render()
+      this.renderContent()
     })
 
     actions.appendChild(resetBtn)
     actions.appendChild(saveBtn)
-    modal.appendChild(actions)
+    editor.appendChild(actions)
 
-    this.modalBackdrop.appendChild(modal)
-    document.body.appendChild(this.modalBackdrop)
-
-    // Escape to close
-    const escHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        this.closeModal()
-        window.removeEventListener('keydown', escHandler)
-      }
-    }
-    window.addEventListener('keydown', escHandler)
-  }
-
-  private closeModal(): void {
-    if (this.modalBackdrop) {
-      this.modalBackdrop.remove()
-      this.modalBackdrop = null
-    }
+    return editor
   }
 
   private createLootRow(
     entry: LootEntry,
+    totalWeight: number,
     onDelete: () => void,
-    onUpdate: (e: LootEntry) => void
+    onUpdate: (e: LootEntry) => void,
   ): HTMLElement {
     const row = document.createElement('div')
     row.className = 'bestiary-loot-row'
 
+    // Thumbnail
     const thumb = document.createElement('canvas')
     thumb.width = 24
     thumb.height = 24
@@ -303,17 +302,25 @@ export class BestiaryPanel {
     }
     row.appendChild(thumb)
 
+    // Name
     const name = document.createElement('span')
     name.className = 'bestiary-loot-name'
     name.textContent = entry.name
     row.appendChild(name)
 
+    // Percentage display
+    const pct = document.createElement('span')
+    pct.className = 'bestiary-loot-pct'
+    pct.textContent = totalWeight > 0 ? `${Math.round((entry.weight / totalWeight) * 100)}%` : '0%'
+    row.appendChild(pct)
+
+    // Weight input
     const weightInput = document.createElement('input')
     weightInput.type = 'number'
     weightInput.min = '1'
     weightInput.max = '100'
     weightInput.value = String(entry.weight)
-    weightInput.className = 'bestiary-loot-weight-input'
+    weightInput.className = 'bestiary-loot-weight'
     weightInput.title = 'Drop weight'
     weightInput.addEventListener('change', () => {
       const val = parseInt(weightInput.value)
@@ -323,6 +330,7 @@ export class BestiaryPanel {
     })
     row.appendChild(weightInput)
 
+    // Delete
     const deleteBtn = document.createElement('button')
     deleteBtn.className = 'bestiary-loot-delete'
     deleteBtn.textContent = '\u00d7'
@@ -514,11 +522,20 @@ export class BestiaryPanel {
     actionRow.append(cancelBtn, addEntryFormBtn)
     form.appendChild(actionRow)
 
-    const addEntryBtn = container.querySelector('.bestiary-add-entry-btn')
-    if (addEntryBtn) {
-      container.insertBefore(form, addEntryBtn)
+    const addBtn = container.querySelector('.bestiary-add-btn')
+    if (addBtn) {
+      container.insertBefore(form, addBtn)
     } else {
       container.appendChild(form)
     }
+  }
+
+  private formatEnemyName(assetId: string): string {
+    return assetId
+      .replace('enemy_', '')
+      .replace('boss_', '')
+      .split('_')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
   }
 }

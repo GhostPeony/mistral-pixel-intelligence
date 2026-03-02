@@ -8,11 +8,18 @@ export class TelemetrySession {
 
   async submitTrace(trace: any): Promise<void> {
     this.traces.push(trace)
-    await fetch('/api/traces', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(trace),
-    })
+    try {
+      const res = await fetch('/api/traces', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trace),
+      })
+      if (!res.ok) {
+        console.error(`Trace submission failed: ${res.status}`)
+      }
+    } catch (err) {
+      console.error('Trace submission error:', err)
+    }
   }
 
   getTraceCount(): number { return this.traces.length }

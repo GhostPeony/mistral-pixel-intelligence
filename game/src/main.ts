@@ -10,6 +10,7 @@ import { PatrolSystem } from './systems/patrol'
 import { BehaviorSystem } from './systems/behavior'
 import { CombatSystem } from './systems/combat'
 import { DoorSystem } from './systems/door'
+import { MoveToSystem } from './systems/move-to'
 import { LootTableManager } from './data/loot-tables'
 import { DialogueManager } from './data/npc-dialogue'
 import { VFXSystem } from './systems/vfx'
@@ -33,6 +34,7 @@ import { ToolExecutor } from './ai/tool-executor'
 import { VoiceService } from './ai/voice'
 import { categorizeEntity } from './systems/layer-manager'
 import type { SavedEntityState, LayerDefinition } from './systems/layer-manager'
+import type { ItemDef, PickupComponent, ConsumableComponent, VoiceLineComponent, ChestComponent, AnyComponent } from './ecs/types'
 import { TraceCapture } from './telemetry/trace-capture'
 import { TelemetrySession } from './telemetry/session'
 import { showTraceToast } from './ui/trace-toast'
@@ -64,6 +66,7 @@ const dialogueManager = new DialogueManager()
 const vfx = new VFXSystem()
 const combatSystem = new CombatSystem(healthSystem, input, lootManager)
 const doorSystem = new DoorSystem()
+const moveToSystem = new MoveToSystem()
 
 // Wire VFX
 renderer.setVFX(vfx)
@@ -85,6 +88,17 @@ healthSystem.setOnEntityDeath((entityId, pos, assetId) => {
 // Wire NPC voice lines
 behaviorSystem.setOnSayVoice((entityId, npcType) => {
   if (voiceService.isSpeaking) return
+
+  // Custom voice line takes priority over dialogue manager
+  const voiceLineComp = world.getComponent(entityId, 'voiceLine') as VoiceLineComponent | undefined
+  if (voiceLineComp?.text) {
+    const profile = dialogueManager.getProfile(npcType)
+    behaviorSystem.setVoiceCooldown(entityId, profile?.cooldownMs ?? 20000)
+    vfx.addSpeechBubble(entityId, voiceLineComp.text)
+    voiceService.speak(voiceLineComp.text, profile?.voiceId)
+    return
+  }
+
   const profile = dialogueManager.getProfile(npcType)
   if (!profile) return
   const line = dialogueManager.pickLine(npcType)
@@ -97,15 +111,29 @@ behaviorSystem.setOnSayVoice((entityId, npcType) => {
 // ---------- Scene Setup ----------
 
 const _autosave = localStorage.getItem('mistral-maker-autosave')
-let player: string
+let player = ''
+let _restoredOk = false
 
 if (_autosave) {
-  // Restore world state from autosave
-  world.replaceFromSnapshot(_autosave)
-  // Find the hero entity from restored state
-  const heroes = world.query('health')
-  player = heroes.find(e => e.name === 'hero')?.id ?? heroes[0]?.id ?? ''
-} else {
+  try {
+    world.replaceFromSnapshot(_autosave)
+    const heroes = world.query('health')
+    const hero = heroes.find(e => e.name === 'hero')
+      ?? heroes.find(e => e.name.toLowerCase().includes('hero'))
+    if (hero) {
+      player = hero.id
+      _restoredOk = true
+    } else {
+      console.warn('Autosave had no hero entity, starting fresh')
+      localStorage.removeItem('mistral-maker-autosave')
+    }
+  } catch (err) {
+    console.warn('Autosave corrupted, starting fresh:', err)
+    localStorage.removeItem('mistral-maker-autosave')
+  }
+}
+
+if (!_restoredOk) {
   // ============ Fresh default scene: Multi-Area Adventure ============
 
   // Helper: create a tile row
@@ -193,12 +221,12 @@ if (_autosave) {
   makeDeco('torch_cave2', 'deco_torch', 1160, 360, 16, 32)
   makeDeco('sign_welcome', 'deco_sign', 80, 376, 24, 24)
 
-  // Chest on high platform (contains health potion pickup)
+  // Chest on high platform (contains health potion)
   const chestForest = world.createEntity('chest_forest')
   world.addComponent(chestForest, { type: 'position', x: 880, y: 216 })
   world.addComponent(chestForest, { type: 'sprite', assetId: 'deco_chest', width: 24, height: 24 })
   world.addComponent(chestForest, { type: 'physics', velocityX: 0, velocityY: 0, gravity: false, solid: false })
-  world.addComponent(chestForest, { type: 'consumable', effect: 'heal', value: 25 })
+  world.addComponent(chestForest, { type: 'chest', opened: false, loot: [{ itemType: 'consumable', consumableEffect: 'heal', consumableValue: 25 }] })
 
   // Health potion on a platform
   const potionForest = world.createEntity('potion_forest')
@@ -328,7 +356,7 @@ if (_autosave) {
   world.addComponent(chestCave, { type: 'sprite', assetId: 'deco_chest', width: 24, height: 24 })
   world.addComponent(chestCave, { type: 'physics', velocityX: 0, velocityY: 0, gravity: false, solid: false })
   world.addComponent(chestCave, { type: 'layer', layerId: 'cave' })
-  world.addComponent(chestCave, { type: 'pickup', itemDef: { id: 'ghost_blade_chest', name: 'Ghost Blade', assetId: 'weapon_dagger', kind: 'melee', damage: 12, range: 35, cooldown: 400, rarity: 'rare', effect: { type: 'dodge', value: 0.08 } } })
+  world.addComponent(chestCave, { type: 'chest', opened: false, loot: [{ itemType: 'pickup', itemDef: { id: 'ghost_blade_chest', name: 'Ghost Blade', assetId: 'weapon_dagger', kind: 'melee', damage: 12, range: 35, cooldown: 400, rarity: 'rare', effect: { type: 'dodge', value: 0.08 } } }] })
 
   // Cave enemies
   makeEnemy('enemy_spider_cave', 'enemy_spider', 100, 100, 25, [[60, 80], [180, 140]], 50, 'cave', false)
@@ -434,7 +462,7 @@ if (_autosave) {
   world.addComponent(chestBoss, { type: 'sprite', assetId: 'deco_chest', width: 24, height: 24 })
   world.addComponent(chestBoss, { type: 'physics', velocityX: 0, velocityY: 0, gravity: false, solid: false })
   world.addComponent(chestBoss, { type: 'layer', layerId: 'arena' })
-  world.addComponent(chestBoss, { type: 'pickup', itemDef: { id: 'demon_cloak_chest', name: 'Demon Cloak', assetId: 'item_cloak', kind: 'passive', rarity: 'legendary', effect: { type: 'lifesteal', value: 0.15 } } })
+  world.addComponent(chestBoss, { type: 'chest', opened: false, loot: [{ itemType: 'pickup', itemDef: { id: 'demon_cloak_chest', name: 'Demon Cloak', assetId: 'item_cloak', kind: 'passive', rarity: 'legendary', effect: { type: 'lifesteal', value: 0.15 } } }] })
 
   // ============ Player ============
 
@@ -813,6 +841,34 @@ backpackPanel.onConfigChange = () => {
   input.setJumpVelocity(GAME_CONFIG.player.jumpVelocity)
 }
 
+backpackPanel.onUseItem = (itemDef, entityId, slotIndex) => {
+  if (!itemDef.effect) return
+  const eff = itemDef.effect
+  switch (eff.type) {
+    case 'max_hp_bonus': {
+      const hp = world.getComponent(entityId, 'health') as import('./ecs/types').HealthComponent | undefined
+      if (hp) {
+        hp.maxHp += eff.value
+        hp.hp = Math.min(hp.hp + eff.value, hp.maxHp)
+        vfx.addHealNumber(
+          (world.getComponent(entityId, 'position') as import('./ecs/types').PositionComponent)?.x ?? 0,
+          (world.getComponent(entityId, 'position') as import('./ecs/types').PositionComponent)?.y ?? 0,
+          eff.value,
+        )
+      }
+      break
+    }
+    case 'speed_boost':
+    case 'crit_boost':
+    case 'dodge':
+      // Passive effects — equip the item instead of consuming
+      break
+    default:
+      break
+  }
+  vfx.addToast(`Used ${itemDef.name}`)
+}
+
 backpackPanel.onDropItem = (itemDef, entityId) => {
   const pos = world.getComponent(entityId, 'position') as import('./ecs/types').PositionComponent | undefined
   if (!pos) return
@@ -879,6 +935,34 @@ interaction.onPatrolEditExit = () => {
   }
 }
 
+// --- Door Link Mode ---
+contextPanel.onEnterDoorLinkMode = (entityId) => {
+  interaction.enterDoorLinkMode(entityId)
+  renderer.setDoorLinkSource(entityId)
+}
+
+interaction.onDoorLinked = (_sourceId, _targetId) => {
+  renderer.setDoorLinkSource(null)
+  // Refresh context panel to show updated link state
+  if (interaction.selectedEntityId) {
+    contextPanel.showEntity(interaction.selectedEntityId)
+  }
+}
+
+interaction.onDoorLinkExit = () => {
+  renderer.setDoorLinkSource(null)
+}
+
+// --- Right-click Move Command ---
+interaction.onMoveCommand = (entityId, x, y) => {
+  world.addComponent(entityId, {
+    type: 'moveTo',
+    targetX: x,
+    targetY: y,
+    speed: GAME_CONFIG.player.walkSpeed,
+  })
+}
+
 // Context panel entity deletion -> deselect in interaction
 contextPanel.onEntityDeleted = (_id) => {
   interaction.selectedEntityId = null
@@ -931,6 +1015,10 @@ let controlledEntityId = player
 function switchControlTo(entityId: string): void {
   const entity = world.getEntity(entityId)
   if (!entity) return
+  // Cancel any active moveTo on the previous controlled entity
+  if (controlledEntityId && controlledEntityId !== entityId) {
+    world.removeComponent(controlledEntityId, 'moveTo')
+  }
   controlledEntityId = entityId
   input.setPlayer(entityId)
   combatSystem.setControlledEntity(entityId)
@@ -1039,6 +1127,10 @@ interaction.onModeChange = (mode) => {
     renderer.setFollowTarget(controlledEntityId)
   } else {
     renderer.setFollowTarget(null)
+    // Cancel any active moveTo when switching to build mode
+    if (controlledEntityId) {
+      world.removeComponent(controlledEntityId, 'moveTo')
+    }
     // Close pause menu when switching to build mode
     if (pauseMenu.isOpen) {
       pauseMenu.close()
@@ -1052,17 +1144,80 @@ interaction.onModeChange = (mode) => {
   }
 }
 
+// --- Item inference for auto-pickup spawning ---
+function deriveItemName(assetId: string): string {
+  // Strip 'weapon_' or 'item_' prefix, split on '_', capitalize, reorder
+  const stripped = assetId.replace(/^(weapon|item)_/, '')
+  const parts = stripped.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1))
+  // Put modifier before noun: weapon_sword_fire -> "Fire Sword"
+  if (parts.length > 1) {
+    const noun = parts.shift()!
+    parts.push(noun)
+  }
+  return parts.join(' ')
+}
+
+function inferItemComponents(assetId: string): AnyComponent[] {
+  const name = deriveItemName(assetId)
+  const components: AnyComponent[] = []
+
+  // Chests get a chest component instead of pickup/consumable
+  if (assetId === 'deco_chest') {
+    components.push({ type: 'chest', loot: [{ itemType: 'consumable', consumableEffect: 'heal', consumableValue: 20 }], opened: false } as ChestComponent)
+    return components
+  }
+
+  // Melee weapons
+  if (/^weapon_(sword|dagger|axe|hammer)/.test(assetId) || assetId === 'item_sword') {
+    const itemDef: ItemDef = { id: assetId, name, assetId, kind: 'melee', damage: 8, range: 40, cooldown: 400 }
+    components.push({ type: 'pickup', itemDef })
+  }
+  // Ranged weapons
+  else if (/^weapon_(staff|crossbow)/.test(assetId) || assetId === 'item_bow') {
+    const itemDef: ItemDef = { id: assetId, name, assetId, kind: 'ranged', damage: 5, range: 200, cooldown: 600 }
+    components.push({ type: 'pickup', itemDef })
+  }
+  // Shields
+  else if (/^weapon_shield/.test(assetId) || assetId === 'item_shield') {
+    const itemDef: ItemDef = { id: assetId, name, assetId, kind: 'shield', defense: 2 }
+    components.push({ type: 'pickup', itemDef })
+  }
+  // Passive equippables (rings, boots, amulets, cloaks)
+  else if (/^(weapon_ring|item_boots|item_amulet|item_cloak)$/.test(assetId)) {
+    const itemDef: ItemDef = { id: assetId, name, assetId, kind: 'passive' }
+    components.push({ type: 'pickup', itemDef })
+  }
+  // Heal consumables (potions, heart)
+  else if (/^item_(potion_|heart$)/.test(assetId)) {
+    components.push({ type: 'consumable', effect: 'heal', value: 10 })
+  }
+  // Score consumables (gems, coins)
+  else if (/^item_(gem_|coin)/.test(assetId)) {
+    components.push({ type: 'consumable', effect: 'score', value: 15 })
+  }
+  // Material pickups (bone, skull, fang, feather, cloth, circuit, key)
+  else if (/^item_(bone|skull|fang|feather|cloth|circuit|key)$/.test(assetId)) {
+    const itemDef: ItemDef = { id: assetId, name, assetId, kind: 'passive' }
+    components.push({ type: 'pickup', itemDef })
+  }
+
+  return components
+}
+
 // Asset browser drop -> create entity
 interaction.onAssetDrop = (assetId, worldX, worldY) => {
   const sprite = SPRITE_REGISTRY[assetId]
   if (!sprite) return
   world.saveSnapshot()
   const currentMode = world.layerManager.getCurrentLayer().gameMode
+  const itemComps = inferItemComponents(assetId)
+  const isItem = itemComps.length > 0
   const id = world.createEntity(assetId)
   world.addComponent(id, { type: 'position', x: worldX, y: worldY })
   world.addComponent(id, { type: 'sprite', assetId, width: sprite.width, height: sprite.height })
-  world.addComponent(id, { type: 'physics', velocityX: 0, velocityY: 0, gravity: currentMode === 'platformer', solid: true })
+  world.addComponent(id, { type: 'physics', velocityX: 0, velocityY: 0, gravity: currentMode === 'platformer', solid: !isItem })
   world.addComponent(id, { type: 'layer', layerId: world.layerManager.currentLayerId })
+  for (const comp of itemComps) world.addComponent(id, comp)
   interaction.selectedEntityId = id
   renderer.setSelectedEntity(id)
   contextPanel.showEntity(id)
@@ -1074,11 +1229,14 @@ assetBrowser.onSpawn = (assetId, x, y) => {
   if (!sprite) return
   world.saveSnapshot()
   const currentMode = world.layerManager.getCurrentLayer().gameMode
+  const itemComps = inferItemComponents(assetId)
+  const isItem = itemComps.length > 0
   const id = world.createEntity(assetId)
   world.addComponent(id, { type: 'position', x, y })
   world.addComponent(id, { type: 'sprite', assetId, width: sprite.width, height: sprite.height })
-  world.addComponent(id, { type: 'physics', velocityX: 0, velocityY: 0, gravity: currentMode === 'platformer', solid: true })
+  world.addComponent(id, { type: 'physics', velocityX: 0, velocityY: 0, gravity: currentMode === 'platformer', solid: !isItem })
   world.addComponent(id, { type: 'layer', layerId: world.layerManager.currentLayerId })
+  for (const comp of itemComps) world.addComponent(id, comp)
 }
 
 // Pixel editor: create sprite -> register + refresh asset browser
@@ -1312,6 +1470,7 @@ const loop = new GameLoop(
     const overlaps = physics.getLastOverlaps()
     healthSystem.update(world, dt)
     patrolSystem.update(world, dt)
+    moveToSystem.update(world, dt)
     behaviorSystem.update(world, dt, overlaps)
     combatSystem.update(world, dt, overlaps)
     doorSystem.update(world, dt, overlaps, input)

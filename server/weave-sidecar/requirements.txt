@@ -1,0 +1,6 @@
+weave
+wandb
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+python-dotenv

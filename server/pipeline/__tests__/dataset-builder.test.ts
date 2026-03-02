@@ -32,6 +32,13 @@ describe('DatasetBuilder', () => {
     expect(dpo.length).toBe(1)
     expect(sft.length).toBe(0)
     expect(dpo[0].prompt).toBe('Build a castle')
+    // DPO seeds now have chat message arrays
+    expect(Array.isArray(dpo[0].chosen)).toBe(true)
+    expect(Array.isArray(dpo[0].rejected)).toBe(true)
+    expect(dpo[0].chosen[0].role).toBe('system')
+    expect(dpo[0].chosen[1].role).toBe('user')
+    expect(dpo[0].chosen[2].role).toBe('assistant')
+    expect(dpo[0].chosen[2].tool_calls).toBeDefined()
   })
 
   it('builds SFT seeds from success traces', () => {
@@ -51,6 +58,13 @@ describe('DatasetBuilder', () => {
     const { dpo, sft } = builder.buildSeeds({ minTier: 'failed' })
     expect(sft.length).toBe(1)
     expect(dpo.length).toBe(0)
+    // SFT seeds now have messages array
+    expect(Array.isArray(sft[0].messages)).toBe(true)
+    expect(sft[0].messages[0].role).toBe('system')
+    expect(sft[0].messages[1].role).toBe('user')
+    expect(sft[0].messages[1].content).toBe('Add a tree')
+    expect(sft[0].messages[2].role).toBe('assistant')
+    expect(sft[0].messages[2].tool_calls).toHaveLength(2)
   })
 
   it('deduplicates by prompt', () => {

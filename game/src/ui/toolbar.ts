@@ -11,7 +11,6 @@ export class Toolbar {
   onExport: (() => void) | null = null
   onSettings: (() => void) | null = null
   onChat: (() => void) | null = null
-  onBackpack: (() => void) | null = null
   onBestiary: (() => void) | null = null
 
   constructor(parent: HTMLElement, private world: World) {
@@ -42,20 +41,12 @@ export class Toolbar {
     dashLink.className = 'toolbar-btn'
     dashLink.textContent = 'Dashboard'
     dashLink.href = '/dashboard.html'
-    dashLink.target = '_blank'
     dashLink.style.textDecoration = 'none'
     left.appendChild(dashLink)
 
     const chatBtn = this.makeBtn('Chat', () => this.onChat?.())
     chatBtn.title = 'Toggle chat (T)'
     left.appendChild(chatBtn)
-
-    const backpackBtn = document.createElement('button')
-    backpackBtn.className = 'toolbar-btn'
-    backpackBtn.title = 'Backpack (B)'
-    backpackBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5 1a1 1 0 0 0-1 1v1H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-1V2a1 1 0 0 0-1-1H5zm0 1h6v1H5V2zM3 5h10a1 1 0 0 1 1 1v1H2V6a1 1 0 0 1 1-1zm-1 3h12v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8z"/></svg>'
-    backpackBtn.addEventListener('click', () => this.onBackpack?.())
-    left.appendChild(backpackBtn)
 
     const bestiaryBtn = document.createElement('button')
     bestiaryBtn.className = 'toolbar-btn'

@@ -45,6 +45,10 @@ export const MISTRAL_TOOLS = [
                   type: 'number',
                   description: 'Color shift 0-360 degrees (default: 0)',
                 },
+                layerId: {
+                  type: 'string',
+                  description: 'Layer to place entity on (default: current active layer)',
+                },
               },
               required: ['name', 'assetId', 'x', 'y'],
             },
@@ -174,7 +178,7 @@ export const MISTRAL_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'move_entity',
-      description: 'Move an existing entity to a new position.',
+      description: 'Move a single entity to a new position.',
       parameters: {
         type: 'object',
         properties: {
@@ -183,6 +187,32 @@ export const MISTRAL_TOOLS = [
           y: { type: 'number' },
         },
         required: ['entityName', 'x', 'y'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'move_entities',
+      description: 'Move multiple entities at once. Use this to rearrange, reorganize, or reposition entities in bulk — much more efficient than calling move_entity many times.',
+      parameters: {
+        type: 'object',
+        properties: {
+          moves: {
+            type: 'array',
+            description: 'Array of entity moves',
+            items: {
+              type: 'object',
+              properties: {
+                entityName: { type: 'string', description: 'Name of entity to move' },
+                x: { type: 'number', description: 'New X position' },
+                y: { type: 'number', description: 'New Y position' },
+              },
+              required: ['entityName', 'x', 'y'],
+            },
+          },
+        },
+        required: ['moves'],
       },
     },
   },
@@ -253,7 +283,7 @@ export const MISTRAL_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'link_doors',
-      description: 'Link two door entities together for teleportation.',
+      description: 'Link two door entities for teleportation. Doors can be on different layers for cross-layer travel. Player presses UP to teleport.',
       parameters: {
         type: 'object',
         properties: {
@@ -275,6 +305,22 @@ export const MISTRAL_TOOLS = [
       name: 'clear_world',
       description: 'Remove all entities except the player hero.',
       parameters: { type: 'object', properties: {} },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'set_layer',
+      description:
+        'Move an entity to a different layer, or change an entity\'s layer assignment.',
+      parameters: {
+        type: 'object',
+        properties: {
+          entityName: { type: 'string', description: 'Name of entity to move' },
+          layerId: { type: 'string', description: 'Target layer ID' },
+        },
+        required: ['entityName', 'layerId'],
+      },
     },
   },
 ]

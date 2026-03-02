@@ -2992,6 +2992,43 @@ const deco_chest: SpriteData = (() => {
   return { width: 24, height: 24, pixels }
 })()
 
+const deco_chest_open: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 24; y++) pixels.push(Array(24).fill(_))
+  // Open lid (tilted back, top rows)
+  for (let x = 4; x < 20; x++) {
+    pixels[2][x] = BD
+    pixels[3][x] = ((x + 3) % 3 === 0) ? BD : BN
+  }
+  // Lid hinge line
+  for (let x = 4; x < 20; x++) pixels[4][x] = AM
+  // Gold glow inside the opening
+  for (let y2 = 5; y2 < 10; y2++) {
+    for (let x = 5; x < 19; x++) {
+      pixels[y2][x] = (y2 < 7) ? GD2 : LY
+    }
+  }
+  // Opening rim
+  for (let x = 4; x < 20; x++) {
+    pixels[5][x] = BD
+    pixels[9][x] = BD
+  }
+  pixels[5][4] = BD; pixels[5][19] = BD
+  // Body (same as closed chest)
+  for (let y2 = 10; y2 < 20; y2++) {
+    for (let x = 4; x < 20; x++) {
+      if (y2 === 10 || y2 === 19 || x === 4 || x === 19) pixels[y2][x] = BD
+      else pixels[y2][x] = BN
+    }
+  }
+  // Metal bands
+  for (let x = 4; x < 20; x++) {
+    pixels[10][x] = AM
+    pixels[15][x] = AM
+  }
+  return { width: 24, height: 24, pixels }
+})()
+
 const deco_barrel: SpriteData = (() => {
   const pixels: string[][] = []
   for (let y = 0; y < 32; y++) pixels.push(Array(24).fill(_))
@@ -3830,6 +3867,369 @@ const boss_demon: SpriteData = (() => {
 })()
 
 // ============================================================
+// DOORS & PORTALS
+// ============================================================
+
+// Door palette
+const DRW = '#8B5A2B' // door wood main
+const DRD = '#6B3A1F' // door wood dark
+const DRL = '#A67B4E' // door wood light
+const IRN = '#7A7A7A' // iron
+const IRD = '#555555' // iron dark
+const IRL = '#999999' // iron light
+const CVD = '#5D4037' // cave dark
+const CVM = '#795548' // cave mid
+const CVL = '#8D6E63' // cave light
+const PBL = '#42A5F5' // portal blue
+const PBD = '#1E88E5' // portal blue dark
+const PBG = '#90CAF9' // portal blue glow
+const PRD = '#E53935' // portal red
+const PRM = '#EF5350' // portal red mid
+const PRG = '#EF9A9A' // portal red glow
+
+const door_wood: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(32).fill(_))
+  // Door frame (dark border)
+  for (let y2 = 0; y2 < 48; y2++) {
+    pixels[y2][4] = DRD
+    pixels[y2][27] = DRD
+  }
+  for (let x = 4; x <= 27; x++) { pixels[0][x] = DRD; pixels[1][x] = DRD }
+  // Door panels
+  for (let y2 = 2; y2 < 48; y2++) {
+    for (let x = 5; x < 27; x++) {
+      if (x < 15) pixels[y2][x] = DRW
+      else if (x === 15 || x === 16) pixels[y2][x] = DRD // center seam
+      else pixels[y2][x] = DRW
+    }
+  }
+  // Planks (horizontal lines)
+  for (const y2 of [10, 20, 30, 40]) {
+    for (let x = 5; x < 27; x++) pixels[y2][x] = DRD
+  }
+  // Highlights
+  for (let y2 = 3; y2 < 9; y2++) { pixels[y2][6] = DRL; pixels[y2][18] = DRL }
+  // Handle
+  pixels[24][23] = GD2; pixels[25][23] = GD2; pixels[24][24] = GD2; pixels[25][24] = GD2
+  // Hinges
+  for (const y2 of [8, 24, 38]) { pixels[y2][5] = AM; pixels[y2 + 1][5] = AM }
+  return { width: 32, height: 48, pixels }
+})()
+
+const door_iron: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(32).fill(_))
+  // Frame
+  for (let y2 = 0; y2 < 48; y2++) { pixels[y2][3] = IRD; pixels[y2][28] = IRD }
+  for (let x = 3; x <= 28; x++) { pixels[0][x] = IRD; pixels[1][x] = IRD }
+  // Door body
+  for (let y2 = 2; y2 < 48; y2++) {
+    for (let x = 4; x < 28; x++) pixels[y2][x] = IRN
+  }
+  // Rivets pattern (grid of dots)
+  for (let ry = 6; ry < 46; ry += 8) {
+    for (let rx = 7; rx < 26; rx += 6) {
+      pixels[ry][rx] = IRL
+    }
+  }
+  // Vertical bars
+  for (let y2 = 2; y2 < 48; y2++) {
+    pixels[y2][10] = IRD; pixels[y2][16] = IRD; pixels[y2][22] = IRD
+  }
+  // Handle ring
+  for (const [dy, dx] of [[22, 24], [23, 25], [24, 25], [25, 24], [22, 23], [23, 23]]) {
+    pixels[dy][dx] = IRL
+  }
+  // Keyhole
+  pixels[28][16] = BK; pixels[29][16] = BK; pixels[30][16] = BK
+  return { width: 32, height: 48, pixels }
+})()
+
+const door_cave: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(32).fill(_))
+  // Arch shape cave entrance
+  for (let y2 = 0; y2 < 48; y2++) {
+    const t = y2 / 48
+    const halfW = Math.floor(8 + t * 8) // widens toward bottom
+    const cx = 16
+    for (let dx = -halfW; dx <= halfW; dx++) {
+      const x = cx + dx
+      if (x < 0 || x >= 32) continue
+      if (Math.abs(dx) >= halfW - 1) {
+        pixels[y2][x] = CVD // edge
+      } else if (Math.abs(dx) >= halfW - 3) {
+        pixels[y2][x] = CVM // mid wall
+      } else {
+        pixels[y2][x] = BK // dark interior
+      }
+    }
+  }
+  // Rocky top arch
+  for (let x = 6; x < 26; x++) {
+    const dy = Math.floor(Math.abs(x - 16) * 0.4)
+    if (dy < 5) {
+      pixels[dy][x] = CVL
+      pixels[dy + 1][x] = CVM
+    }
+  }
+  // Stalactites
+  for (const sx of [10, 14, 19, 22]) {
+    pixels[4][sx] = CVD; pixels[5][sx] = CVM
+  }
+  return { width: 32, height: 48, pixels }
+})()
+
+const door_portal_blue: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(32).fill(_))
+  // Oval portal shape
+  const cx = 16, cy = 24
+  for (let y2 = 4; y2 < 46; y2++) {
+    for (let x = 2; x < 30; x++) {
+      const dx = (x - cx) / 12
+      const dy = (y2 - cy) / 20
+      const d = dx * dx + dy * dy
+      if (d < 1.0 && d > 0.6) {
+        pixels[y2][x] = PBD // ring
+      } else if (d <= 0.6 && d > 0.3) {
+        pixels[y2][x] = PBL // inner ring
+      } else if (d <= 0.3) {
+        pixels[y2][x] = PBG // glow center
+      }
+    }
+  }
+  // Sparkle highlights
+  pixels[10][16] = WH; pixels[24][8] = WH; pixels[24][24] = WH; pixels[38][16] = WH
+  return { width: 32, height: 48, pixels }
+})()
+
+const door_portal_red: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(32).fill(_))
+  // Oval portal shape
+  const cx = 16, cy = 24
+  for (let y2 = 4; y2 < 46; y2++) {
+    for (let x = 2; x < 30; x++) {
+      const dx = (x - cx) / 12
+      const dy = (y2 - cy) / 20
+      const d = dx * dx + dy * dy
+      if (d < 1.0 && d > 0.6) {
+        pixels[y2][x] = PRD // ring
+      } else if (d <= 0.6 && d > 0.3) {
+        pixels[y2][x] = PRM // inner ring
+      } else if (d <= 0.3) {
+        pixels[y2][x] = PRG // glow center
+      }
+    }
+  }
+  // Sparkle highlights
+  pixels[10][16] = WH; pixels[24][8] = WH; pixels[24][24] = WH; pixels[38][16] = WH
+  return { width: 32, height: 48, pixels }
+})()
+
+const door_trapdoor: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 16; y++) pixels.push(Array(32).fill(_))
+  // Trapdoor planks
+  for (let y2 = 2; y2 < 14; y2++) {
+    for (let x = 2; x < 30; x++) {
+      pixels[y2][x] = DRW
+    }
+  }
+  // Border
+  for (let x = 2; x < 30; x++) { pixels[2][x] = DRD; pixels[13][x] = DRD }
+  for (let y2 = 2; y2 < 14; y2++) { pixels[y2][2] = DRD; pixels[y2][29] = DRD }
+  // Plank seams
+  for (let x = 2; x < 30; x++) { pixels[6][x] = DRD; pixels[10][x] = DRD }
+  // Highlights
+  for (let x = 4; x < 12; x++) { pixels[3][x] = DRL; pixels[7][x] = DRL }
+  // Handle ring
+  pixels[7][16] = AM; pixels[8][15] = AM; pixels[8][17] = AM; pixels[9][16] = AM
+  return { width: 32, height: 16, pixels }
+})()
+
+// ============================================================
+// STRUCTURAL TILES
+// ============================================================
+
+const tile_wall_stone: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 32; y++) pixels.push(Array(32).fill(_))
+  for (let y2 = 0; y2 < 32; y2++) {
+    for (let x = 0; x < 32; x++) {
+      // Alternating brick pattern
+      const row = Math.floor(y2 / 8)
+      const offset = (row % 2) * 8
+      const bx = (x + offset) % 16
+      if (y2 % 8 === 0 || bx === 0) pixels[y2][x] = SN // mortar lines
+      else if ((x + y2) % 7 === 0) pixels[y2][x] = ST // highlight
+      else pixels[y2][x] = SM
+    }
+  }
+  return { width: 32, height: 32, pixels }
+})()
+
+const tile_wall_brick: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 32; y++) pixels.push(Array(32).fill(_))
+  const BC = '#B71C1C' // brick color
+  const BM = '#C62828' // brick mid
+  const BH = '#D32F2F' // brick highlight
+  for (let y2 = 0; y2 < 32; y2++) {
+    for (let x = 0; x < 32; x++) {
+      const row = Math.floor(y2 / 8)
+      const offset = (row % 2) * 8
+      const bx = (x + offset) % 16
+      if (y2 % 8 === 0 || bx === 0) pixels[y2][x] = SM // mortar
+      else if (x % 5 === 1 && y2 % 8 === 2) pixels[y2][x] = BH
+      else pixels[y2][x] = (x + y2) % 3 === 0 ? BC : BM
+    }
+  }
+  return { width: 32, height: 32, pixels }
+})()
+
+const tile_fence: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 32; y++) pixels.push(Array(32).fill(_))
+  // Posts at edges
+  for (let y2 = 0; y2 < 32; y2++) {
+    pixels[y2][2] = BD; pixels[y2][3] = BN; pixels[y2][4] = BL
+    pixels[y2][27] = BD; pixels[y2][28] = BN; pixels[y2][29] = BL
+  }
+  // Post caps
+  for (let x = 1; x <= 5; x++) { pixels[0][x] = BD; pixels[1][x] = BN }
+  for (let x = 26; x <= 30; x++) { pixels[0][x] = BD; pixels[1][x] = BN }
+  // Cross rails
+  for (let x = 5; x <= 27; x++) {
+    pixels[8][x] = BD; pixels[9][x] = BN; pixels[10][x] = BL
+    pixels[20][x] = BD; pixels[21][x] = BN; pixels[22][x] = BL
+  }
+  // Pickets
+  for (const px of [10, 16, 22]) {
+    for (let y2 = 2; y2 < 30; y2++) {
+      pixels[y2][px] = BN; pixels[y2][px + 1] = BL
+    }
+    pixels[2][px] = BD; pixels[2][px + 1] = BD // pointed tops
+  }
+  return { width: 32, height: 32, pixels }
+})()
+
+const tile_gate: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 48; y++) pixels.push(Array(32).fill(_))
+  // Stone pillars
+  for (let y2 = 0; y2 < 48; y2++) {
+    for (let x = 0; x < 6; x++) pixels[y2][x] = x < 2 ? SN : SM
+    for (let x = 26; x < 32; x++) pixels[y2][x] = x > 29 ? SN : SM
+  }
+  // Pillar caps
+  for (let x = 0; x < 8; x++) { pixels[0][x] = ST; pixels[1][x] = SN }
+  for (let x = 24; x < 32; x++) { pixels[0][x] = ST; pixels[1][x] = SN }
+  // Arch
+  for (let x = 6; x < 26; x++) {
+    const dy = Math.floor(Math.abs(x - 16) * 0.3)
+    pixels[2 + dy][x] = SM
+    pixels[3 + dy][x] = SN
+  }
+  // Iron bars
+  for (let y2 = 6; y2 < 48; y2++) {
+    for (const bx of [10, 14, 18, 22]) {
+      const archDy = Math.floor(Math.abs(bx - 16) * 0.3)
+      if (y2 > 4 + archDy) {
+        pixels[y2][bx] = IRN
+      }
+    }
+  }
+  // Cross bar
+  for (let x = 6; x < 26; x++) { pixels[24][x] = IRD }
+  return { width: 32, height: 48, pixels }
+})()
+
+const tile_bridge: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 16; y++) pixels.push(Array(32).fill(_))
+  // Planks
+  for (let y2 = 2; y2 < 12; y2++) {
+    for (let x = 0; x < 32; x++) {
+      if (x % 8 === 0) pixels[y2][x] = BD // plank gaps
+      else pixels[y2][x] = (x + y2) % 5 === 0 ? DRL : DRW
+    }
+  }
+  // Rails
+  for (let x = 0; x < 32; x++) {
+    pixels[0][x] = BD; pixels[1][x] = BN
+    pixels[12][x] = BD; pixels[13][x] = BN
+  }
+  // Rope supports
+  pixels[14][4] = BD; pixels[14][12] = BD; pixels[14][20] = BD; pixels[14][28] = BD
+  return { width: 32, height: 16, pixels }
+})()
+
+const tile_ladder: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 32; y++) pixels.push(Array(32).fill(_))
+  // Side rails
+  for (let y2 = 0; y2 < 32; y2++) {
+    pixels[y2][8] = BD; pixels[y2][9] = BN
+    pixels[y2][22] = BD; pixels[y2][23] = BN
+  }
+  // Rungs
+  for (let ry = 4; ry < 32; ry += 7) {
+    for (let x = 10; x < 22; x++) {
+      pixels[ry][x] = BN
+      pixels[ry + 1][x] = BL
+    }
+  }
+  return { width: 32, height: 32, pixels }
+})()
+
+const tile_platform_wood: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 16; y++) pixels.push(Array(32).fill(_))
+  // Top plank surface
+  for (let y2 = 0; y2 < 8; y2++) {
+    for (let x = 0; x < 32; x++) {
+      if (y2 < 2) pixels[y2][x] = DRL // top highlight
+      else pixels[y2][x] = DRW
+    }
+  }
+  // Support beams
+  for (let y2 = 8; y2 < 16; y2++) {
+    pixels[y2][4] = BD; pixels[y2][5] = BN
+    pixels[y2][15] = BD; pixels[y2][16] = BN
+    pixels[y2][26] = BD; pixels[y2][27] = BN
+  }
+  // Plank seams
+  for (let y2 = 0; y2 < 8; y2++) {
+    pixels[y2][8] = DRD; pixels[y2][16] = DRD; pixels[y2][24] = DRD
+  }
+  return { width: 32, height: 16, pixels }
+})()
+
+const tile_spikes: SpriteData = (() => {
+  const pixels: string[][] = []
+  for (let y = 0; y < 16; y++) pixels.push(Array(16).fill(_))
+  // Base
+  for (let x = 0; x < 16; x++) {
+    pixels[14][x] = SM; pixels[15][x] = SN
+  }
+  // Spikes
+  for (const sx of [2, 6, 10, 14]) {
+    for (let y2 = 4; y2 < 14; y2++) {
+      const t = (y2 - 4) / 10
+      const half = Math.floor(t * 2)
+      pixels[y2][sx - half] = ST
+      pixels[y2][sx] = IRL
+      if (half > 0) pixels[y2][sx + half] = ST
+    }
+    pixels[4][sx] = WH // tip
+  }
+  return { width: 16, height: 16, pixels }
+})()
+
+// ============================================================
 // REGISTRY
 // ============================================================
 
@@ -3925,11 +4325,28 @@ export const SPRITE_REGISTRY: Record<string, SpriteData> = {
   deco_torch,
   deco_sign,
   deco_chest,
+  deco_chest_open,
   deco_barrel,
   deco_rock,
   deco_bush,
   deco_flower,
   deco_crystal,
+  // Doors & Portals
+  door_wood,
+  door_iron,
+  door_cave,
+  door_portal_blue,
+  door_portal_red,
+  door_trapdoor,
+  // Structural
+  tile_wall_stone,
+  tile_wall_brick,
+  tile_fence,
+  tile_gate,
+  tile_bridge,
+  tile_ladder,
+  tile_platform_wood,
+  tile_spikes,
   // Bosses
   boss_dragon,
   boss_golem,

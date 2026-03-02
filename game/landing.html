@@ -10,18 +10,32 @@
   </head>
   <body>
     <div id="landing">
-      <!-- Hero Section -->
+      <!-- Hero Banner -->
       <section id="hero">
-        <h1 class="hero-title">Q-Bit and Build</h1>
-        <p class="hero-tagline">Create worlds with AI. One pixel at a time.</p>
-        <div id="sprite-showcase"></div>
-        <button id="play-btn" class="cta-btn" disabled>Select a Character to Play</button>
+        <div class="hero-inner">
+          <div class="hero-text">
+            <h1 class="hero-title">Q-Bit and Build</h1>
+            <p class="hero-tagline">Create worlds with AI. One pixel at a time.</p>
+          </div>
+          <div id="sprite-showcase"></div>
+        </div>
       </section>
 
-      <!-- Features Section -->
-      <section id="features">
-        <div class="section-tag">FEATURES</div>
-        <div class="features-grid">
+      <!-- Main Content: Characters + Features sidebar -->
+      <section id="main-content">
+        <div class="main-left">
+          <div class="section-header">
+            <div class="section-tag">YOUR CHARACTERS</div>
+            <div class="section-header-actions">
+              <button id="play-btn" class="cta-btn" disabled>Select a Character</button>
+              <a href="/" class="landing-link-btn">Editor</a>
+              <a href="/dashboard.html" class="landing-link-btn">Dashboard</a>
+            </div>
+          </div>
+          <div id="character-grid"></div>
+        </div>
+        <aside class="main-right">
+          <div class="section-tag">FEATURES</div>
           <div class="feature-card">
             <div class="feature-tag">AI</div>
             <h3>AI Level Generation</h3>
@@ -37,18 +51,16 @@
             <h3>Train Your Model</h3>
             <p>Capture traces, build datasets, fine-tune with DPO. Make the AI yours.</p>
           </div>
-        </div>
-      </section>
-
-      <!-- Character Select Section -->
-      <section id="characters">
-        <div class="section-tag">YOUR CHARACTERS</div>
-        <div id="character-grid"></div>
+        </aside>
       </section>
 
       <!-- Footer -->
       <footer id="landing-footer">
         <p>Q-Bit and Build &mdash; Built with Mistral AI</p>
+        <div class="footer-links">
+          <a href="https://github.com/GhostPeony" class="footer-link">GitHub</a>
+          <a href="https://www.ghostpeony.com" class="footer-link">ghostpeony.com</a>
+        </div>
       </footer>
     </div>
     <script type="module" src="/src/landing.ts"></script>

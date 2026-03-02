@@ -1,7 +1,23 @@
 import { World } from '../ecs/world'
 import { ASSET_IDS } from '../assets/sprites'
 import { MISTRAL_TOOLS } from './tool-definitions'
-import type { PositionComponent, SpriteComponent } from '../ecs/types'
+import { GAME_CONFIG } from '../config/game-config'
+import type {
+  PositionComponent,
+  SpriteComponent,
+  PhysicsComponent,
+  HealthComponent,
+  PatrolComponent,
+  BehaviorComponent,
+  LayerComponent,
+  DoorComponent,
+  FacingComponent,
+  EquipmentComponent,
+  InventoryComponent,
+  ConsumableComponent,
+  PickupComponent,
+  Entity,
+} from '../ecs/types'
 
 export interface ToolCall {
   id: string
@@ -12,6 +28,8 @@ export interface MistralResponse {
   toolCalls: ToolCall[]
   textContent: string
   stopReason: string
+  modelId: string
+  routingDecision?: any
 }
 
 interface ChatMessage {
@@ -21,11 +39,16 @@ interface ChatMessage {
   tool_call_id?: string
 }
 
+/** Max messages to keep in conversation history (not counting system/dynamic context). */
+const MAX_HISTORY_MESSAGES = 20
+
 export class MistralClient {
   private messages: ChatMessage[] = []
 
   /** Send a user message, including fresh world state in the system prompt. */
   async send(text: string, world: World): Promise<MistralResponse> {
+    // Prune old history before adding new message — keep only recent turns
+    this.pruneHistory()
     this.messages.push({ role: 'user', content: text })
     return this.callApi(world)
   }
@@ -44,17 +67,39 @@ export class MistralClient {
     return this.callApi()
   }
 
+  /** Clear all conversation history. Call between unrelated tasks. */
+  clearHistory(): void {
+    this.messages = []
+  }
+
+  private pruneHistory(): void {
+    if (this.messages.length <= MAX_HISTORY_MESSAGES) return
+
+    // Keep the most recent messages, dropping oldest non-tool messages
+    // We must keep tool messages that are paired with their assistant tool_calls
+    const keep = this.messages.slice(-MAX_HISTORY_MESSAGES)
+
+    // If first kept message is a tool result, we lost its assistant context — drop it
+    while (keep.length > 0 && keep[0].role === 'tool') {
+      keep.shift()
+    }
+
+    this.messages = keep
+  }
+
   private async callApi(world?: World): Promise<MistralResponse> {
     const body: {
       messages: ChatMessage[]
       tools: typeof MISTRAL_TOOLS
       systemPrompt?: string
+      dynamicContext?: string
     } = {
       messages: this.messages,
       tools: MISTRAL_TOOLS,
     }
     if (world) {
-      body.systemPrompt = this.buildSystemPrompt(world)
+      // Dynamic context: full game state snapshot sent per-turn
+      body.dynamicContext = this.buildDynamicContext(world)
     }
 
     const res = await fetch('/api/ai/chat', {
@@ -103,65 +148,233 @@ export class MistralClient {
       toolCalls,
       textContent: choice.content ?? '',
       stopReason: data.choices?.[0]?.finish_reason ?? 'stop',
+      modelId: data.modelId ?? data.model ?? 'unknown',
+      routingDecision: data.routingDecision,
     }
   }
 
-  private buildSystemPrompt(world: World): string {
-    const worldDescription = this.describeWorld(world)
+  /**
+   * Build dynamic context sent per-turn. Contains current world state snapshot
+   * so the AI always has an accurate, complete picture of the game.
+   * Stable instructions (persona, guidelines) are managed server-side by AgentManager.
+   */
+  private buildDynamicContext(world: World): string {
+    const sections: string[] = []
 
-    return `You are an AI level designer in Mistral Maker, a pixel-art platformer builder. The player describes what they want in natural language, and you use the available tools to create, modify, and arrange game entities on screen.
+    // 1. Engine config
+    sections.push(this.describeConfig())
 
-## Current World State
-${worldDescription}
+    // 2. Layers
+    sections.push(this.describeLayers(world))
 
-## Scale Reference
-- The player hero is 32x32 pixels.
-- Tiles (grass, stone, brick, etc.) are 32x32 each.
-- Trees are 48x64. Structures (houses, castles, towers) are 64-128px wide and 64-128px tall.
-- Items and decorations are 16x16.
-- The ground line in the default scene is at y=400. Entities with gravity will fall until they hit solid ground.
-- Positive Y is downward (screen coordinates). To place something above ground, use a smaller y value.
+    // 3. Entity list (grouped by layer)
+    sections.push(this.describeEntities(world))
 
-## Available Asset IDs
-${ASSET_IDS.join(', ')}
+    // 4. Door network
+    const doorSection = this.describeDoorNetwork(world)
+    if (doorSection) sections.push(doorSection)
 
-## Guidelines
-- Use the tools to create and modify entities. Be creative and generous with details.
-- When the player asks for a "level" or "scene", spawn ground tiles, platforms, enemies, decorations, and items to make it feel alive.
-- Place entities on solid ground or on platforms. Account for gravity: characters fall if there is no solid surface below them.
-- When the player critiques or asks for changes, adjust what is already there rather than rebuilding from scratch.
-- After executing tools, provide a brief friendly description of what you created or changed.
-- You may call multiple tools in a single response to build complex scenes efficiently.
-- When spawning rows of tiles, space them 32px apart (tile size).
-- Give every entity a descriptive, unique name.`
+    // 5. Available assets (compact)
+    sections.push(`## Available Sprites\n${ASSET_IDS.join(', ')}`)
+
+    return sections.join('\n\n')
   }
 
-  private describeWorld(world: World): string {
+  /** Game config: physics, player movement — things the AI needs to place entities correctly */
+  private describeConfig(): string {
+    const p = GAME_CONFIG.physics
+    const pl = GAME_CONFIG.player
+    return `## Engine Config
+gravity=${p.gravity} killZoneY=${p.killZoneY} walkSpeed=${pl.walkSpeed} jumpVel=${pl.jumpVelocity} maxJumps=${pl.maxJumps} gridSize=${GAME_CONFIG.editor.gridSize}
+Scale: player=32x32 tiles=32x32 trees=48x64 structures=64-128px`
+  }
+
+  /** All layers with their game mode, bounds, and background */
+  private describeLayers(world: World): string {
+    const lm = world.layerManager
+    const lines = [`## Layers (active: ${lm.currentLayerId})`]
+
+    for (const layer of lm.layers) {
+      const active = layer.id === lm.currentLayerId ? ' [ACTIVE]' : ''
+      const b = layer.bounds
+      lines.push(
+        `- "${layer.name}" id=${layer.id} mode=${layer.gameMode}${active} bounds=[${b.minX},${b.maxX}]x[${b.minY},${b.maxY}] topSolid=${b.topSolid}${layer.backgroundTileId ? ` bg=${layer.backgroundTileId}` : ''}`,
+      )
+    }
+
+    return lines.join('\n')
+  }
+
+  /** All entities grouped by layer, with compact component summaries */
+  private describeEntities(world: World): string {
     const entities = world.getAllEntities()
-    if (entities.length === 0) return 'The world is empty.'
+    if (entities.length === 0) return '## World State\nThe world is empty.'
 
-    const lines: string[] = []
+    // Group by layer
+    const byLayer = new Map<string, Entity[]>()
     for (const entity of entities) {
-      const pos = entity.components.get('position') as
-        | PositionComponent
-        | undefined
-      const sprite = entity.components.get('sprite') as
-        | SpriteComponent
-        | undefined
-
-      const posStr = pos ? `(${pos.x}, ${pos.y})` : '(no position)'
-      const spriteStr = sprite ? sprite.assetId : 'no sprite'
-
-      lines.push(`- "${entity.name}" [${spriteStr}] at ${posStr}`)
+      const lc = entity.components.get('layer') as LayerComponent | undefined
+      const layerId = lc?.layerId ?? 'default'
+      if (!byLayer.has(layerId)) byLayer.set(layerId, [])
+      byLayer.get(layerId)!.push(entity)
     }
 
-    // Summarize if too many entities to avoid bloating the prompt
-    if (lines.length > 60) {
-      const summary = lines.slice(0, 30)
-      summary.push(`... and ${lines.length - 30} more entities`)
-      return summary.join('\n')
+    const lines = [`## World State (${entities.length} entities)`]
+
+    // Hard cap: if > 80 entities total, summarize
+    const summarize = entities.length > 80
+
+    for (const [layerId, layerEntities] of byLayer) {
+      lines.push(`\n### Layer: ${layerId} (${layerEntities.length} entities)`)
+
+      const entitiesToShow = summarize
+        ? layerEntities.slice(0, 40)
+        : layerEntities
+
+      for (const entity of entitiesToShow) {
+        lines.push(this.describeEntity(entity, world))
+      }
+
+      if (summarize && layerEntities.length > 40) {
+        lines.push(`  ... +${layerEntities.length - 40} more`)
+      }
     }
 
+    return lines.join('\n')
+  }
+
+  /** Single entity — compact one-liner with all active components */
+  private describeEntity(entity: Entity, world: World): string {
+    const parts: string[] = []
+
+    // Position
+    const pos = entity.components.get('position') as PositionComponent | undefined
+    parts.push(pos ? `@(${Math.round(pos.x)},${Math.round(pos.y)})` : '@(?)')
+
+    // Sprite
+    const sprite = entity.components.get('sprite') as SpriteComponent | undefined
+    if (sprite) {
+      let s = sprite.assetId
+      if (sprite.width !== 16 || sprite.height !== 16) {
+        s += ` ${sprite.width}x${sprite.height}`
+      }
+      if (sprite.flipX) s += ' flipX'
+      if (sprite.hueShift) s += ` hue=${sprite.hueShift}`
+      parts.push(s)
+    }
+
+    // Physics
+    const phys = entity.components.get('physics') as PhysicsComponent | undefined
+    if (phys) {
+      const flags: string[] = []
+      if (phys.gravity) flags.push('grav')
+      if (phys.solid) flags.push('solid')
+      if (flags.length) parts.push(flags.join('+'))
+    }
+
+    // Health
+    const hp = entity.components.get('health') as HealthComponent | undefined
+    if (hp) {
+      parts.push(`hp:${hp.hp}/${hp.maxHp}`)
+    }
+
+    // Facing
+    const facing = entity.components.get('facing') as FacingComponent | undefined
+    if (facing) {
+      parts.push(`face:${facing.direction}`)
+    }
+
+    // Patrol
+    const patrol = entity.components.get('patrol') as PatrolComponent | undefined
+    if (patrol) {
+      parts.push(`patrol:${patrol.waypoints.length}wp spd=${patrol.speed}${patrol.loop ? ' loop' : ''}`)
+    }
+
+    // Behavior rules
+    const behavior = entity.components.get('behavior') as BehaviorComponent | undefined
+    if (behavior && behavior.rules.length > 0) {
+      const rules = behavior.rules
+        .filter((r) => r.enabled)
+        .map((r) => `${r.trigger}→${r.action}`)
+      if (rules.length > 0) parts.push(`rules:[${rules.join('; ')}]`)
+    }
+
+    // Door
+    const door = entity.components.get('door') as DoorComponent | undefined
+    if (door) {
+      if (door.destinationId) {
+        const dest = world.getEntity(door.destinationId)
+        parts.push(`door→"${dest?.name ?? door.destinationId}"${door.bidirectional ? ' bidi' : ''}`)
+      } else {
+        parts.push('door(unlinked)')
+      }
+    }
+
+    // Equipment
+    const equip = entity.components.get('equipment') as EquipmentComponent | undefined
+    if (equip) {
+      const slots: string[] = []
+      if (equip.slots.weapon) slots.push(`wpn:${equip.slots.weapon.name}`)
+      if (equip.slots.armor) slots.push(`arm:${equip.slots.armor.name}`)
+      if (equip.slots.accessory) slots.push(`acc:${equip.slots.accessory.name}`)
+      if (slots.length) parts.push(slots.join(' '))
+    }
+
+    // Inventory
+    const inv = entity.components.get('inventory') as InventoryComponent | undefined
+    if (inv) {
+      const filled = inv.items.filter((i) => i !== null).length
+      parts.push(`inv:${filled}/${inv.capacity}`)
+    }
+
+    // Consumable
+    const cons = entity.components.get('consumable') as ConsumableComponent | undefined
+    if (cons) {
+      parts.push(`${cons.effect}=${cons.value}`)
+    }
+
+    // Pickup
+    const pickup = entity.components.get('pickup') as PickupComponent | undefined
+    if (pickup) {
+      parts.push(`pickup:${pickup.itemDef.name}`)
+    }
+
+    return `- "${entity.name}" ${parts.join(' | ')}`
+  }
+
+  /** Summarize the door teleport network */
+  private describeDoorNetwork(world: World): string | null {
+    const entities = world.getAllEntities()
+    const doors: { name: string; destName: string; bidi: boolean }[] = []
+
+    for (const entity of entities) {
+      const door = entity.components.get('door') as DoorComponent | undefined
+      if (!door || !door.destinationId) continue
+
+      // Avoid duplicating bidirectional pairs
+      const dest = world.getEntity(door.destinationId)
+      if (!dest) continue
+
+      const alreadyListed = doors.some(
+        (d) => d.name === dest.name && d.destName === entity.name,
+      )
+      if (alreadyListed) continue
+
+      doors.push({
+        name: entity.name,
+        destName: dest.name,
+        bidi: door.bidirectional,
+      })
+    }
+
+    if (doors.length === 0) return null
+
+    const lines = ['## Door Network']
+    for (const d of doors) {
+      lines.push(
+        `- "${d.name}" ${d.bidi ? '<->' : '->'} "${d.destName}"`,
+      )
+    }
     return lines.join('\n')
   }
 }

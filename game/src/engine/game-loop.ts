@@ -5,7 +5,7 @@ export class GameLoop {
 
   constructor(
     private onUpdate: (dt: number) => void,
-    private onRender: () => void,
+    private onRender: (dt: number) => void,
   ) {}
 
   start(): void {
@@ -25,7 +25,7 @@ export class GameLoop {
     const dt = Math.min(time - this.lastTime, 50) // Cap dt to avoid spiral
     this.lastTime = time
     this.onUpdate(dt)
-    this.onRender()
+    this.onRender(dt)
     this.animFrameId = requestAnimationFrame((t) => this.frame(t))
   }
 }

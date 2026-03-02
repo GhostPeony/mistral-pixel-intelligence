@@ -73,6 +73,12 @@ export interface DoorComponent extends Component {
   bidirectional: boolean
 }
 
+export interface ItemEffect {
+  type: 'lifesteal' | 'thorns' | 'speed_boost' | 'max_hp_bonus'
+      | 'crit_boost' | 'poison' | 'fire_damage' | 'dodge'
+  value: number
+}
+
 export interface ItemDef {
   id: string
   name: string
@@ -84,6 +90,9 @@ export interface ItemDef {
   projectileAssetId?: string
   critChance?: number
   damageBonus?: number
+  defense?: number
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+  effect?: ItemEffect
 }
 
 export interface FacingComponent extends Component {
@@ -100,6 +109,12 @@ export interface EquipmentComponent extends Component {
   }
 }
 
+export interface InventoryComponent extends Component {
+  type: 'inventory'
+  items: (ItemDef | null)[]
+  capacity: number
+}
+
 export interface PickupComponent extends Component {
   type: 'pickup'
   itemDef: ItemDef
@@ -111,11 +126,29 @@ export interface ConsumableComponent extends Component {
   value: number
 }
 
+export interface VoiceLineComponent extends Component {
+  type: 'voiceLine'
+  text: string
+}
+
 export interface MoveToComponent extends Component {
   type: 'moveTo'
   targetX: number
   targetY: number
   speed: number
+}
+
+export interface ChestLootEntry {
+  itemType: 'consumable' | 'pickup'
+  consumableEffect?: 'heal' | 'speed' | 'ammo' | 'score'
+  consumableValue?: number
+  itemDef?: ItemDef
+}
+
+export interface ChestComponent extends Component {
+  type: 'chest'
+  loot: ChestLootEntry[]
+  opened: boolean
 }
 
 export type AnyComponent =
@@ -129,9 +162,12 @@ export type AnyComponent =
   | DoorComponent
   | FacingComponent
   | EquipmentComponent
+  | InventoryComponent
   | PickupComponent
   | ConsumableComponent
+  | VoiceLineComponent
   | MoveToComponent
+  | ChestComponent
 
 export interface Entity {
   id: EntityId

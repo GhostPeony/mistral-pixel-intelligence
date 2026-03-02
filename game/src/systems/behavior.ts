@@ -1,10 +1,16 @@
 import type { World } from '../ecs/world'
 import type {
   BehaviorComponent, PositionComponent,
-  PhysicsComponent, HealthComponent, Entity
+  PhysicsComponent, HealthComponent, Entity,
+  LayerComponent
 } from '../ecs/types'
 import type { Collision } from './physics'
 import { HealthSystem } from './health'
+
+function getEntityLayer(entity: Entity): string {
+  const lc = entity.components.get('layer') as LayerComponent | undefined
+  return lc?.layerId ?? 'default'
+}
 
 interface BehaviorContext {
   entity: Entity
@@ -67,9 +73,11 @@ export class BehaviorSystem {
         const distance = parseFloat(parts[1]) || 100
         const pos = ctx.entity.components.get('position') as PositionComponent | undefined
         if (!pos) return false
+        const myLayer = getEntityLayer(ctx.entity)
         for (const other of ctx.world.query('position')) {
           if (other.id === ctx.entity.id) continue
           if (other.name !== 'hero') continue
+          if (getEntityLayer(other) !== myLayer) continue
           const oPos = other.components.get('position') as PositionComponent
           const dx = pos.x - oPos.x
           const dy = pos.y - oPos.y
@@ -125,11 +133,12 @@ export class BehaviorSystem {
         const phys = ctx.entity.components.get('physics') as PhysicsComponent | undefined
         if (!pos || !phys) break
 
+        const myLayer = getEntityLayer(ctx.entity)
         let target: Entity | undefined
         if (targetName === 'player') {
-          target = ctx.world.getAllEntities().find(e => e.name === 'hero')
+          target = ctx.world.getAllEntities().find(e => e.name === 'hero' && getEntityLayer(e) === myLayer)
         } else {
-          target = ctx.world.getAllEntities().find(e => e.name === targetName)
+          target = ctx.world.getAllEntities().find(e => e.name === targetName && getEntityLayer(e) === myLayer)
         }
 
         if (target) {
@@ -149,7 +158,8 @@ export class BehaviorSystem {
         const pos = ctx.entity.components.get('position') as PositionComponent | undefined
         const phys = ctx.entity.components.get('physics') as PhysicsComponent | undefined
         if (!pos || !phys) break
-        const hero = ctx.world.getAllEntities().find(e => e.name === 'hero')
+        const myLayer = getEntityLayer(ctx.entity)
+        const hero = ctx.world.getAllEntities().find(e => e.name === 'hero' && getEntityLayer(e) === myLayer)
         if (hero) {
           const hPos = hero.components.get('position') as PositionComponent | undefined
           if (hPos) {

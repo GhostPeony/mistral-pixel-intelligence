@@ -1,4 +1,5 @@
 import type { EntityId, Entity, AnyComponent } from './types'
+import { LayerManager } from '../systems/layer-manager'
 
 type EntityData = { id: string; name: string; components: Record<string, AnyComponent> }
 
@@ -6,6 +7,7 @@ export class World {
   private entities = new Map<EntityId, Entity>()
   private nextId = 1
   private undoStack: string[] = []
+  layerManager = new LayerManager()
 
   saveSnapshot(): void {
     this.undoStack.push(this.serialize())
@@ -70,7 +72,7 @@ export class World {
       }
       entityData.push({ id: entity.id, name: entity.name, components })
     }
-    return JSON.stringify({ entities: entityData })
+    return JSON.stringify({ entities: entityData, layers: this.layerManager.serialize() })
   }
 
   replaceFromSnapshot(json: string): void {
@@ -85,6 +87,16 @@ export class World {
       })
       const idNum = parseInt(item.id.split('_')[1])
       if (idNum >= this.nextId) this.nextId = idNum + 1
+    }
+    if (parsed.layers) {
+      this.layerManager.restore(parsed.layers)
+    }
+
+    // Backfill missing layer components on old saves
+    for (const entity of this.entities.values()) {
+      if (!entity.components.has('layer')) {
+        entity.components.set('layer', { type: 'layer', layerId: 'default' })
+      }
     }
   }
 

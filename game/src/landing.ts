@@ -29,7 +29,7 @@ function renderSpriteShowcase() {
   for (const id of heroes) {
     const sprite = SPRITE_REGISTRY[id]
     if (!sprite) continue
-    const canvas = renderSpriteToCanvas(sprite, 64, 64)
+    const canvas = renderSpriteToCanvas(sprite, 48, 48)
     canvas.className = 'showcase-sprite'
     showcase.appendChild(canvas)
   }

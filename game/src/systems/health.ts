@@ -1,28 +1,38 @@
 import type { World } from '../ecs/world'
 import type { HealthComponent, PositionComponent, PhysicsComponent, SpriteComponent } from '../ecs/types'
+import type { VFXSystem } from './vfx'
+import { SPRITE_REGISTRY } from '../assets/sprites'
 
 export class HealthSystem {
   private onDeath: ((entityId: string, pos: { x: number; y: number }, assetId: string) => void) | null = null
+  private vfx: VFXSystem | null = null
 
   setOnEntityDeath(cb: typeof this.onDeath): void { this.onDeath = cb }
+  setVFX(vfx: VFXSystem): void { this.vfx = vfx }
 
   update(world: World, dt: number): void {
     for (const entity of world.query('health')) {
       const health = entity.components.get('health') as HealthComponent
 
-      // Tick invulnerability
+      // Tick invulnerability + flash
       if (health.invulnerableTimer > 0) {
         health.invulnerableTimer = Math.max(0, health.invulnerableTimer - dt)
+        this.vfx?.setFlashing(entity.id, health.invulnerableTimer > 0)
       }
 
       // Death and respawn
       if (health.hp <= 0 && health.deadTimer === 0) {
         // Fire death callback for loot drops
-        if (this.onDeath) {
-          const pos = entity.components.get('position') as PositionComponent | undefined
-          const sprite = entity.components.get('sprite') as SpriteComponent | undefined
-          if (pos && sprite) {
-            this.onDeath(entity.id, { x: pos.x, y: pos.y }, sprite.assetId)
+        const pos = entity.components.get('position') as PositionComponent | undefined
+        const sprite = entity.components.get('sprite') as SpriteComponent | undefined
+        if (this.onDeath && pos && sprite) {
+          this.onDeath(entity.id, { x: pos.x, y: pos.y }, sprite.assetId)
+        }
+        // Pixel death explosion VFX
+        if (this.vfx && pos && sprite) {
+          const spriteData = SPRITE_REGISTRY[sprite.assetId]
+          if (spriteData) {
+            this.vfx.addPixelExplosion(pos.x, pos.y, sprite.width, sprite.height, spriteData.pixels)
           }
         }
         health.deadTimer = health.respawnDelay || 1000

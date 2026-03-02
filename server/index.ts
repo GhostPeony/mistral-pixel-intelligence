@@ -1,3 +1,11 @@
+import { config } from 'dotenv'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+// Load .env from project root (one level up from server/)
+const __dirname = dirname(fileURLToPath(import.meta.url))
+config({ path: join(__dirname, '..', '.env') })
+
 import express from 'express'
 import cors from 'cors'
 import aiRouter from './routes/ai.js'

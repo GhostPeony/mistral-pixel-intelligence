@@ -24,6 +24,10 @@ describe('Pipeline Integration', () => {
         { id: 'e2', name: 'skeleton', components: { sprite: { assetId: 'enemy_skeleton' }, position: { x: 150, y: 200 } } },
       ],
       toolCalls: [{ name: 'spawn_entities', arguments: '{}' }],
+      cognitive: {
+        thinking: 'The player wants a haunted castle with guards. I will spawn a castle and one skeleton.',
+        plan: 'Spawn castle, then add a skeleton guard next to it.',
+      },
     },
     chosen: {
       entities: [
@@ -38,10 +42,19 @@ describe('Pipeline Integration', () => {
         { name: 'move_entity', arguments: '{}' },
         { name: 'add_behavior', arguments: '{}' },
       ],
+      cognitive: {
+        thinking: 'Player wanted more guards and decoration. Adding second skeleton and torches.',
+        reflection: 'Spreading entities apart and adding atmosphere with torches.',
+      },
     },
     feedback: 'Added 3 entities. Modified 1 entity.',
     critiques: ['spread skeletons apart', 'add torches to entrance'],
     attempts: 3,
+    cognitive: {
+      thinking: 'Player wants a haunted castle scene with multiple guards.',
+      plan: 'Castle + skeleton guards + decorative torches for atmosphere.',
+      reflection: 'Initial attempt had too few entities, needed more spacing and decoration.',
+    },
     context: { model: 'mistral-large-latest', sessionId: 'test', timestamp: new Date().toISOString(), canvasSize: { width: 800, height: 600 } },
   }
 
@@ -63,21 +76,31 @@ describe('Pipeline Integration', () => {
         { name: 'add_behavior' },
         { name: 'set_health' },
       ],
+      cognitive: {
+        thinking: 'Player wants a lava pit hazard. I will create lava tiles in a row with damage behavior on the particle effects.',
+        plan: 'Spawn 6 lava tiles, 2 particle effects with collision damage.',
+      },
     },
     score: 1.0,
+    cognitive: {
+      thinking: 'Creating a hazard zone with visual lava tiles and damage-dealing particles.',
+      plan: '6 lava tiles + 2 particle entities with hurt behavior.',
+    },
     context: { model: 'mistral-large-latest', sessionId: 'test', timestamp: new Date().toISOString(), canvasSize: { width: 800, height: 600 } },
   }
 
-  it('scores traces correctly', () => {
+  it('scores traces correctly with cognitive quality', () => {
     const correctionScore = scoreTrace(mockCorrection)
     expect(correctionScore.overall).toBeGreaterThan(0)
     expect(correctionScore.overall).toBeLessThan(1)
     expect(correctionScore.verification).toBe(0.5) // correction = 0.5
+    expect(correctionScore.cognitiveQuality).toBeGreaterThan(0.1) // has cognitive data
 
     const successScore = scoreTrace(mockSuccess)
     expect(successScore.overall).toBeGreaterThan(correctionScore.overall)
     expect(successScore.successRate).toBe(1.0)
     expect(successScore.verification).toBe(1.0)
+    expect(successScore.cognitiveQuality).toBeGreaterThan(0.1) // has cognitive data
   })
 
   it('classifies tiers based on scores', () => {
@@ -104,10 +127,15 @@ describe('Pipeline Integration', () => {
     expect(sft.length).toBe(1)
 
     expect(dpo[0].prompt).toBe('Build a haunted castle with skeleton guards')
-    expect(JSON.parse(dpo[0].chosen)).toHaveLength(3)
-    expect(JSON.parse(dpo[0].rejected)).toHaveLength(1)
+    // DPO seeds are now chat message arrays
+    expect(Array.isArray(dpo[0].chosen)).toBe(true)
+    const chosenAssistant = dpo[0].chosen.find((m: any) => m.role === 'assistant')!
+    expect(chosenAssistant.tool_calls).toHaveLength(3)
+    const rejectedAssistant = dpo[0].rejected.find((m: any) => m.role === 'assistant')!
+    expect(rejectedAssistant.tool_calls).toHaveLength(1)
 
-    expect(sft[0].prompt).toBe('Add a lava pit between platforms')
+    // SFT seeds use messages format
+    expect(sft[0].messages[1].content).toBe('Add a lava pit between platforms')
   })
 
   it('writes dataset files to disk', () => {

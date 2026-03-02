@@ -12,6 +12,7 @@ import type {
   DoorComponent,
   FacingComponent,
   EquipmentComponent,
+  LayerComponent,
   ItemDef,
 } from '../ecs/types'
 
@@ -39,6 +40,8 @@ export class ToolExecutor {
         return this.equipItem(a)
       case 'move_entity':
         return this.moveEntity(a)
+      case 'move_entities':
+        return this.moveEntities(a)
       case 'delete_entity':
         return this.deleteEntity(a)
       case 'resize_entity':
@@ -51,6 +54,8 @@ export class ToolExecutor {
         return this.linkDoors(a)
       case 'clear_world':
         return this.clearWorld()
+      case 'set_layer':
+        return this.setLayer(a)
       default:
         return { result: `Unknown tool: ${toolName}`, error: true }
     }
@@ -82,6 +87,7 @@ export class ToolExecutor {
       gravity?: boolean
       solid?: boolean
       hueShift?: number
+      layerId?: string
     }[]
   }): ToolResult {
     const created: string[] = []
@@ -113,17 +119,27 @@ export class ToolExecutor {
       } as SpriteComponent)
 
       // Add physics: gravity defaults to false for static, true for characters
+      // In topdown mode layers, default gravity to false regardless
+      const targetLayer = def.layerId ?? this.world.layerManager.currentLayerId
+      const layerMode = this.world.layerManager.getGameModeForLayer(targetLayer)
       const isCharacter =
         def.assetId.startsWith('hero_') ||
         def.assetId.startsWith('enemy_') ||
         def.assetId.startsWith('npc_')
+      const defaultGravity = layerMode === 'topdown' ? false : isCharacter
       this.world.addComponent(id, {
         type: 'physics',
         velocityX: 0,
         velocityY: 0,
-        gravity: def.gravity ?? isCharacter,
+        gravity: def.gravity ?? defaultGravity,
         solid: def.solid ?? true,
       } as PhysicsComponent)
+
+      // Assign to layer
+      this.world.addComponent(id, {
+        type: 'layer',
+        layerId: targetLayer,
+      } as LayerComponent)
 
       created.push(def.name)
     }
@@ -295,6 +311,40 @@ export class ToolExecutor {
     return { result: `Moved ${entity.name} to (${args.x}, ${args.y})` }
   }
 
+  private moveEntities(args: {
+    moves: { entityName: string; x: number; y: number }[]
+  }): ToolResult {
+    const results: string[] = []
+    const errors: string[] = []
+
+    for (const move of args.moves) {
+      const entity = this.findByName(move.entityName)
+      if (!entity) {
+        errors.push(move.entityName)
+        continue
+      }
+
+      const pos = entity.components.get('position') as PositionComponent | undefined
+      if (pos) {
+        pos.x = move.x
+        pos.y = move.y
+      } else {
+        this.world.addComponent(entity.id, {
+          type: 'position',
+          x: move.x,
+          y: move.y,
+        } as PositionComponent)
+      }
+      results.push(`${entity.name}→(${move.x},${move.y})`)
+    }
+
+    let msg = `Moved ${results.length} entities: ${results.join(', ')}`
+    if (errors.length > 0) {
+      msg += ` | Not found: ${errors.join(', ')}`
+    }
+    return { result: msg, error: errors.length > 0 && results.length === 0 }
+  }
+
   private deleteEntity(args: { entityName: string }): ToolResult {
     const entity = this.findByName(args.entityName)
     if (!entity) {
@@ -450,5 +500,30 @@ export class ToolExecutor {
     }
 
     return { result: `Cleared world: removed ${removed} entities (kept hero)` }
+  }
+
+  private setLayer(args: { entityName: string; layerId: string }): ToolResult {
+    const entity = this.findByName(args.entityName)
+    if (!entity) {
+      return { result: `Entity not found: ${args.entityName}`, error: true }
+    }
+
+    const layer = this.world.layerManager.getLayer(args.layerId)
+    if (!layer) {
+      return { result: `Layer not found: ${args.layerId}`, error: true }
+    }
+
+    // Update or add layer component
+    const existing = entity.components.get('layer') as LayerComponent | undefined
+    if (existing) {
+      existing.layerId = args.layerId
+    } else {
+      this.world.addComponent(entity.id, {
+        type: 'layer',
+        layerId: args.layerId,
+      } as LayerComponent)
+    }
+
+    return { result: `Moved ${entity.name} to layer "${layer.name}" (${args.layerId})` }
   }
 }

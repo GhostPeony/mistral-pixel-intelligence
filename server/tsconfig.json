@@ -7,8 +7,17 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": ".",
+    "rootDir": "..",
     "sourceMap": true
   },
-  "include": ["*.ts", "pipeline/**/*.ts", "routes/**/*.ts"]
+  "include": [
+    "*.ts",
+    "pipeline/**/*.ts",
+    "routes/**/*.ts",
+    "eval/**/*.ts",
+    "ai/**/*.ts",
+    "../game/src/ecs/**/*.ts",
+    "../game/src/ai/**/*.ts",
+    "../game/src/assets/**/*.ts"
+  ]
 }

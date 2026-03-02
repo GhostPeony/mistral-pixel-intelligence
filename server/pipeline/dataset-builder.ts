@@ -1,12 +1,41 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { join } from 'path'
 import { scoreTrace, classifyTier } from './scorer.js'
-import type { DpoSeed, SftSeed, Tier } from './types.js'
+import type { ChatMessage, DpoSeed, SftSeed, Tier } from './types.js'
 
 export interface BuildOptions {
   minTier?: Tier
   maxSeeds?: number
   dedup?: boolean
+}
+
+const SYSTEM_MESSAGE: ChatMessage = {
+  role: 'system',
+  content: `You are an AI level designer in Mistral Maker, a pixel-art platformer builder. The player describes what they want in natural language, and you use the available tools to create, modify, and arrange game entities on screen.
+
+## Scale Reference
+- Tiles are 32x32. Trees are 48x64. Structures are 64-128px.
+- Items and decorations are 16x16. Ground line at y=400. Positive Y is down.
+
+## Design Guidelines
+- Place entities on solid ground or platforms. Space tiles 32px apart.
+- Give every entity a descriptive name. Use multiple tool calls for complex scenes.
+- When critiqued, adjust rather than rebuild from scratch.`,
+}
+
+/**
+ * Convert raw tool calls from traces into the tool_calls format
+ * that Mistral/OpenAI chat completions use.
+ */
+function formatToolCalls(toolCalls: any[]): any[] {
+  return toolCalls.map((tc, i) => ({
+    id: `call_${i}`,
+    type: 'function',
+    function: {
+      name: tc.name ?? tc.function?.name ?? 'create_entity',
+      arguments: tc.arguments ?? tc.function?.arguments ?? '{}',
+    },
+  }))
 }
 
 export class DatasetBuilder {
@@ -32,16 +61,44 @@ export class DatasetBuilder {
       seen.add(hash)
 
       if (trace.type === 'correction') {
+        const userMsg: ChatMessage = { role: 'user', content: trace.prompt }
         dpo.push({
           prompt: trace.prompt,
-          chosen: JSON.stringify(trace.chosen.toolCalls),
-          rejected: JSON.stringify(trace.rejected.toolCalls),
+          chosen: [
+            SYSTEM_MESSAGE,
+            userMsg,
+            {
+              role: 'assistant',
+              content: trace.feedback ?? 'Here is the corrected scene.',
+              tool_calls: formatToolCalls(trace.chosen.toolCalls ?? []),
+            },
+          ],
+          rejected: [
+            SYSTEM_MESSAGE,
+            userMsg,
+            {
+              role: 'assistant',
+              content: '',
+              tool_calls: formatToolCalls(trace.rejected.toolCalls ?? []),
+            },
+          ],
           feedback: trace.feedback ?? '',
         })
       } else if (trace.type === 'success') {
+        const cognitive = trace.cognitive ?? trace.output?.cognitive
+        const assistantContent = cognitive?.thinking
+          ? `${cognitive.thinking}\n\n${trace.output?.description ?? 'Done!'}`
+          : (trace.output?.description ?? 'Here is what I created.')
         sft.push({
-          prompt: trace.prompt,
-          completion: JSON.stringify(trace.output.toolCalls),
+          messages: [
+            SYSTEM_MESSAGE,
+            { role: 'user', content: trace.prompt },
+            {
+              role: 'assistant',
+              content: assistantContent,
+              tool_calls: formatToolCalls(trace.output?.toolCalls ?? []),
+            },
+          ],
         })
       }
 

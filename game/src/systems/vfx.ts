@@ -47,12 +47,50 @@ export interface SpeechBubble {
   lifetime: number
 }
 
+export interface ChestPrompt {
+  entityId: string
+  x: number
+  y: number
+  width: number
+}
+
+export interface Burst {
+  x: number
+  y: number
+  age: number
+  lifetime: number
+}
+
+export interface ItemGlow {
+  entityId: string
+  color: string
+  age: number
+}
+
+export interface DeathPixel {
+  x: number; y: number
+  vx: number; vy: number
+  color: string
+  grounded: boolean
+  groundY: number
+}
+
+export interface PixelExplosion {
+  pixels: DeathPixel[]
+  age: number
+  lifetime: number // ms — pixels linger as pile then fade
+}
+
 export class VFXSystem {
   floatingTexts: FloatingText[] = []
   slashArcs: SlashArc[] = []
   pickupPrompts: PickupPrompt[] = []
   itemToasts: ItemToast[] = []
   speechBubbles: SpeechBubble[] = []
+  itemGlows: ItemGlow[] = []
+  chestPrompts: ChestPrompt[] = []
+  bursts: Burst[] = []
+  pixelExplosions: PixelExplosion[] = []
   /** Entity IDs currently flashing (invulnerable) */
   flashingEntities = new Set<string>()
 
@@ -67,6 +105,60 @@ export class VFXSystem {
       velocityY: -40,
       fontSize: 12,
     })
+  }
+
+  addCritNumber(x: number, y: number, damage: number): void {
+    this.floatingTexts.push({
+      x: x + (Math.random() - 0.5) * 12,
+      y: y - 8,
+      text: `CRIT! -${damage}`,
+      color: '#FFD700',
+      age: 0,
+      lifetime: 1000,
+      velocityY: -50,
+      fontSize: 14,
+    })
+  }
+
+  addMissText(x: number, y: number): void {
+    this.floatingTexts.push({
+      x: x + (Math.random() - 0.5) * 12,
+      y: y - 4,
+      text: 'MISS',
+      color: '#AAAAAA',
+      age: 0,
+      lifetime: 600,
+      velocityY: -30,
+      fontSize: 11,
+    })
+  }
+
+  addItemGlow(entityId: string, color: string): void {
+    this.itemGlows.push({ entityId, color, age: 0 })
+  }
+
+  addPixelExplosion(worldX: number, worldY: number, spriteWidth: number, spriteHeight: number, pixels: string[][]): void {
+    const deathPixels: DeathPixel[] = []
+    const groundY = worldY + spriteHeight // ground level = bottom of entity
+    // Scale factor: sprite pixels → world pixels
+    const scaleX = spriteWidth / (pixels[0]?.length || 1)
+    const scaleY = spriteHeight / pixels.length
+    for (let row = 0; row < pixels.length; row++) {
+      for (let col = 0; col < (pixels[row]?.length || 0); col++) {
+        const color = pixels[row][col]
+        if (!color) continue // transparent
+        deathPixels.push({
+          x: worldX + col * scaleX,
+          y: worldY + row * scaleY,
+          vx: (Math.random() - 0.5) * 120,
+          vy: -(Math.random() * 80 + 40),
+          color,
+          grounded: false,
+          groundY: groundY + Math.random() * 4 - 2, // slight variation
+        })
+      }
+    }
+    this.pixelExplosions.push({ pixels: deathPixels, age: 0, lifetime: 3000 })
   }
 
   addHealNumber(x: number, y: number, amount: number): void {
@@ -96,12 +188,12 @@ export class VFXSystem {
     })
   }
 
+  addToast(text: string, lifetime = 2000): void {
+    this.itemToasts.push({ text, age: 0, lifetime })
+  }
+
   addItemToast(itemName: string): void {
-    this.itemToasts.push({
-      text: `Picked up ${itemName}`,
-      age: 0,
-      lifetime: 2000,
-    })
+    this.addToast(`Picked up ${itemName}`)
   }
 
   addSpeechBubble(entityId: string, text: string, lifetime: number = 3500): void {
@@ -113,6 +205,14 @@ export class VFXSystem {
 
   setPickupPrompts(prompts: PickupPrompt[]): void {
     this.pickupPrompts = prompts
+  }
+
+  setChestPrompts(prompts: ChestPrompt[]): void {
+    this.chestPrompts = prompts
+  }
+
+  addBurst(x: number, y: number): void {
+    this.bursts.push({ x, y, age: 0, lifetime: 400 })
   }
 
   setFlashing(entityId: string, flashing: boolean): void {
@@ -153,5 +253,42 @@ export class VFXSystem {
       bubble.age += dt
       if (bubble.age >= bubble.lifetime) this.speechBubbles.splice(i, 1)
     }
+
+    // Age item glows (persist until entity is removed)
+    for (const glow of this.itemGlows) {
+      glow.age += dt
+    }
+
+    // Age bursts
+    for (let i = this.bursts.length - 1; i >= 0; i--) {
+      this.bursts[i].age += dt
+      if (this.bursts[i].age >= this.bursts[i].lifetime) this.bursts.splice(i, 1)
+    }
+
+    // Update pixel explosions
+    const dtSec = dt / 1000
+    for (let i = this.pixelExplosions.length - 1; i >= 0; i--) {
+      const explosion = this.pixelExplosions[i]
+      explosion.age += dt
+      if (explosion.age >= explosion.lifetime) {
+        this.pixelExplosions.splice(i, 1)
+        continue
+      }
+      for (const p of explosion.pixels) {
+        if (p.grounded) continue
+        p.vy += 300 * dtSec // gravity
+        p.x += p.vx * dtSec
+        p.y += p.vy * dtSec
+        if (p.y >= p.groundY) {
+          p.y = p.groundY
+          p.grounded = true
+        }
+      }
+    }
+  }
+
+  /** Remove glow for a specific entity (called when entity is collected/removed). */
+  removeItemGlow(entityId: string): void {
+    this.itemGlows = this.itemGlows.filter(g => g.entityId !== entityId)
   }
 }
