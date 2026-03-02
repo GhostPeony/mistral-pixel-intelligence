@@ -1,16 +1,20 @@
-# Mistral Maker
+# Q-Bit and Build
 
-A self-improving pixel platformer where AI learns taste from player feedback. You prompt, you critique, the model gets better.
+**An AI game engine that learns your design taste.**
+
+Q-Bit and Build is a prompt-driven pixel platformer where you talk to an AI to build levels, then play through them. Describe a castle entrance with skeleton guards — the AI spawns it. Don't like the layout? Critique it, drag things around, ask it to try again. When you're satisfied, click "Looks Good" and your feedback becomes training data.
+
+Every approval and every correction feeds a live fine-tuning pipeline: traces are scored across 7 quality dimensions, classified into tiers, amplified 3-5x through NVIDIA NeMo, and used to train a student Mistral-7B model via QLoRA. The student model progressively takes over generation as it improves — measured by automated benchmarks across playability, design quality, and tool efficiency. The AI doesn't just generate levels. It learns what *your* idea of a good level looks like, and gets better at it every session.
 
 Built for the **Mistral Worldwide Hackathon** by [Ghost Peony](https://github.com/GhostPeony).
 
-![Mistral Maker: The Self-Improving AI Game Engine](QBit.jpg)
+![Q-Bit and Build: The Self-Improving AI Game Engine](QBit.jpg)
 
 ---
 
 ## The Game
 
-Mistral Maker is a **prompt-driven level builder** with a playable platformer inside it. You describe what you want in plain English (or speak it), and the AI builds it in real time on a pixel canvas. Then you switch to play mode and run through what you just made.
+Q-Bit and Build is a **prompt-driven level builder** with a playable platformer inside it. You describe what you want in plain English (or speak it), and the AI builds it in real time on a pixel canvas. Then you switch to play mode and run through what you just made.
 
 ### Build Mode
 
