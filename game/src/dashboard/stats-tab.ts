@@ -1,7 +1,20 @@
+interface OrchestratorState {
+  status: string
+  goldCount: number
+  silverCount: number
+  bronzeCount: number
+  failedCount: number
+  totalTraces: number
+  lastActivity: string | null
+  currentStep: string | null
+  error: string | null
+}
+
 interface PipelineStatus {
   traces: number
   tiers: { gold: number; silver: number; bronze: number; failed: number }
   dataDesigner: { available: boolean; method: string }
+  orchestrator: OrchestratorState
 }
 
 interface Trace {
@@ -33,8 +46,10 @@ export class StatsTab {
 
       this.container.innerHTML = ''
       this.renderCards(status, traces)
+      this.renderOrchestratorStatus(status.orchestrator)
       this.renderTierBar(status.tiers)
       this.renderScoring()
+      this.renderQualityGate()
       this.renderPipeline()
       this.renderWeaveActions()
       this.renderRecentActivity(traces)
@@ -76,6 +91,39 @@ export class StatsTab {
         <div class="stat-card-sub">${subtitle}</div>
       </div>
     `
+  }
+
+  private renderOrchestratorStatus(orch: OrchestratorState): void {
+    const section = document.createElement('div')
+    section.className = 'stats-section'
+    section.innerHTML = `<h3 class="stats-section-title">Orchestrator</h3>`
+
+    const modeMap: Record<string, string> = {
+      idle: 'MANUAL', running: 'SEMI', amplifying: 'SEMI',
+      training: 'FULL', evaluating: 'FULL', stopped: 'STOPPED',
+    }
+    const modeLabel = modeMap[orch.status] ?? orch.status.toUpperCase()
+    const isActive = orch.status !== 'idle' && orch.status !== 'stopped'
+    const lastTime = orch.lastActivity
+      ? new Date(orch.lastActivity).toLocaleString()
+      : 'never'
+
+    const row = document.createElement('div')
+    row.style.display = 'flex'
+    row.style.gap = '16px'
+    row.style.alignItems = 'center'
+    row.style.flexWrap = 'wrap'
+
+    row.innerHTML = `
+      <span class="tag-badge">${modeLabel}</span>
+      <span class="tag-badge ${isActive ? 'tag-badge-active' : ''}">${orch.status.toUpperCase()}</span>
+      ${orch.currentStep ? `<span class="trace-count">Step: ${orch.currentStep}</span>` : ''}
+      <span class="trace-count">Last: ${lastTime}</span>
+      ${orch.error ? `<span class="step-error">${orch.error}</span>` : ''}
+    `
+
+    section.appendChild(row)
+    this.container!.appendChild(section)
   }
 
   private renderTierBar(tiers: PipelineStatus['tiers']): void {
@@ -132,6 +180,25 @@ export class StatsTab {
         ${this.dim('Tool Diversity', 10)}
         ${this.dim('Efficiency', 10)}
         ${this.dim('Length', 5)}
+      </div>
+    `
+    this.container!.appendChild(section)
+  }
+
+  private renderQualityGate(): void {
+    const section = document.createElement('div')
+    section.className = 'stats-section'
+    section.innerHTML = `
+      <h3 class="stats-section-title">Quality Gate</h3>
+      <div class="dimension-bars">
+        ${this.dim('Playability', 40)}
+        ${this.dim('Design Quality', 35)}
+        ${this.dim('Tool Efficiency', 25)}
+      </div>
+      <div class="tier-legend" style="margin-top:8px">
+        <span class="tier-legend-item"><span class="tier-dot" style="background:#D4A017"></span>Gold \u2265 75%</span>
+        <span class="tier-legend-item"><span class="tier-dot" style="background:#A0A0A0"></span>Silver \u2265 55%</span>
+        <span class="tier-legend-item"><span class="tier-dot" style="background:#CD7F32"></span>Bronze \u2265 40%</span>
       </div>
     `
     this.container!.appendChild(section)
@@ -209,42 +276,70 @@ export class StatsTab {
   private renderWeaveActions(): void {
     const section = document.createElement('div')
     section.className = 'stats-section'
-    section.innerHTML = `<h3 class="stats-section-title">W&B Weave</h3>`
+    section.innerHTML = `<h3 class="stats-section-title">Evaluation</h3>`
 
-    const row = document.createElement('div')
-    row.style.display = 'flex'
-    row.style.gap = '12px'
-    row.style.alignItems = 'center'
+    const controls = document.createElement('div')
+    controls.style.display = 'flex'
+    controls.style.gap = '12px'
+    controls.style.alignItems = 'center'
+    controls.style.flexWrap = 'wrap'
+
+    const modelInput = document.createElement('input')
+    modelInput.type = 'text'
+    modelInput.className = 'editor-input'
+    modelInput.value = 'mistral-large-latest'
+    modelInput.placeholder = 'Model ID'
+    modelInput.style.width = '220px'
 
     const btn = document.createElement('button')
-    btn.className = 'editor-btn editor-btn-secondary'
+    btn.className = 'editor-btn editor-btn-primary'
     btn.textContent = 'Run Evaluation'
 
     const status = document.createElement('span')
     status.className = 'trace-count'
 
+    const results = document.createElement('div')
+    results.className = 'eval-results'
+    results.style.marginTop = '12px'
+
     btn.addEventListener('click', async () => {
+      const modelId = modelInput.value.trim()
+      if (!modelId) { status.textContent = 'Enter a model ID'; return }
       btn.disabled = true
       btn.textContent = 'Evaluating...'
+      results.innerHTML = ''
       try {
-        const res = await fetch('http://localhost:3002/eval', { method: 'POST' })
+        const res = await fetch('/api/eval/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelId }),
+        })
         const data = await res.json()
-        if (data.status === 'completed') {
-          status.textContent = `\u2713 ${data.trace_count} traces evaluated`
-        } else {
-          status.textContent = data.message || 'No traces'
-        }
+        if (data.error) throw new Error(data.error)
+        status.textContent = `Score: ${(data.overall * 100).toFixed(1)}%`
         btn.textContent = 'Re-run'
-      } catch {
-        status.textContent = 'Sidecar offline'
+        if (data.dimensions) {
+          const dims = Object.entries(data.dimensions as Record<string, { dimension: string; score: number }>)
+          results.innerHTML = dims.map(([key, d]) =>
+            `<div class="dimension-row">
+              <span class="dimension-label">${key}</span>
+              <div class="dimension-track"><div class="dimension-fill" style="width:${d.score * 100}%"></div></div>
+              <span class="dimension-value">${(d.score * 100).toFixed(0)}%</span>
+            </div>`
+          ).join('')
+        }
+      } catch (err) {
+        status.textContent = err instanceof Error ? err.message : 'Eval failed'
         btn.textContent = 'Run Evaluation'
       }
       btn.disabled = false
     })
 
-    row.appendChild(btn)
-    row.appendChild(status)
-    section.appendChild(row)
+    controls.appendChild(modelInput)
+    controls.appendChild(btn)
+    controls.appendChild(status)
+    section.appendChild(controls)
+    section.appendChild(results)
     this.container!.appendChild(section)
   }
 
