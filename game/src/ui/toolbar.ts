@@ -1,4 +1,5 @@
 import type { World } from '../ecs/world'
+import { createMusicButton, startMusic } from './music-player'
 
 export class Toolbar {
   private container: HTMLElement
@@ -58,6 +59,9 @@ export class Toolbar {
     const right = document.createElement('div')
     right.className = 'toolbar-group'
 
+    const musicEl = createMusicButton()
+    right.appendChild(musicEl)
+
     this.statusDot = document.createElement('span')
     this.statusDot.className = 'status-dot connected'
     this.statusDot.title = 'Server status'
@@ -73,6 +77,15 @@ export class Toolbar {
     this.container.appendChild(left)
     this.container.appendChild(right)
     parent.prepend(this.container)
+
+    // Start music on first user interaction (browser autoplay policy)
+    const tryStart = () => {
+      startMusic()
+      document.removeEventListener('click', tryStart)
+      document.removeEventListener('keydown', tryStart)
+    }
+    document.addEventListener('click', tryStart, { once: true })
+    document.addEventListener('keydown', tryStart, { once: true })
 
     this.startAutoSave()
   }
