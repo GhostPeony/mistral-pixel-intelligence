@@ -65,20 +65,93 @@ export class ModelsTab {
       `
 
       if (model.hasAdapter) {
+        const adapterPath = `.mistral-maker/models/${model.name}/adapter`
+        const btnRow = document.createElement('div')
+        btnRow.style.display = 'flex'
+        btnRow.style.gap = '8px'
+        btnRow.style.marginTop = '8px'
+        btnRow.style.flexWrap = 'wrap'
+
         const copyBtn = document.createElement('button')
         copyBtn.className = 'editor-btn editor-btn-secondary'
         copyBtn.textContent = 'Copy Path'
-        copyBtn.style.marginTop = '8px'
         copyBtn.addEventListener('click', () => {
-          const path = `.mistral-maker/models/${model.name}/adapter`
-          navigator.clipboard.writeText(path).then(() => {
+          navigator.clipboard.writeText(adapterPath).then(() => {
             copyBtn.textContent = 'Copied!'
             setTimeout(() => { copyBtn.textContent = 'Copy Path' }, 2000)
           }).catch(() => {
-            alert(`Path: ${path}`)
+            alert(`Path: ${adapterPath}`)
           })
         })
-        card.appendChild(copyBtn)
+
+        const deployBtn = document.createElement('button')
+        deployBtn.className = 'editor-btn editor-btn-primary'
+        deployBtn.textContent = 'Deploy'
+
+        const evalBtn = document.createElement('button')
+        evalBtn.className = 'editor-btn editor-btn-secondary'
+        evalBtn.textContent = 'Run Eval'
+
+        const resultEl = document.createElement('div')
+        resultEl.className = 'step-result'
+
+        deployBtn.addEventListener('click', async () => {
+          deployBtn.disabled = true
+          deployBtn.textContent = 'Deploying...'
+          try {
+            const res = await fetch('/api/ai/deploy-student', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ modelId: adapterPath }),
+            })
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+            resultEl.innerHTML = `<span class="step-success">\u2713 Deployed (${data.deployed?.strategy ?? 'ok'})</span>`
+            deployBtn.textContent = 'Redeploy'
+          } catch (err) {
+            resultEl.innerHTML = `<span class="step-error">${err instanceof Error ? err.message : err}</span>`
+            deployBtn.textContent = 'Deploy'
+          }
+          deployBtn.disabled = false
+        })
+
+        evalBtn.addEventListener('click', async () => {
+          evalBtn.disabled = true
+          evalBtn.textContent = 'Evaluating...'
+          resultEl.innerHTML = ''
+          try {
+            const res = await fetch('/api/eval/run', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ modelId: adapterPath }),
+            })
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+            let html = `<span class="step-success">Score: ${(data.overall * 100).toFixed(1)}%</span>`
+            if (data.dimensions) {
+              const dims = Object.entries(data.dimensions as Record<string, { score: number }>)
+              html += '<div style="margin-top:8px">' + dims.map(([key, d]) =>
+                `<div class="dimension-row">
+                  <span class="dimension-label">${key}</span>
+                  <div class="dimension-track"><div class="dimension-fill" style="width:${d.score * 100}%"></div></div>
+                  <span class="dimension-value">${(d.score * 100).toFixed(0)}%</span>
+                </div>`
+              ).join('') + '</div>'
+            }
+            resultEl.innerHTML = html
+            evalBtn.textContent = 'Re-run Eval'
+          } catch (err) {
+            resultEl.innerHTML = `<span class="step-error">${err instanceof Error ? err.message : err}</span>`
+            evalBtn.textContent = 'Run Eval'
+          }
+          evalBtn.disabled = false
+        })
+
+        btnRow.appendChild(copyBtn)
+        btnRow.appendChild(deployBtn)
+        btnRow.appendChild(evalBtn)
+        card.appendChild(btnRow)
+        card.appendChild(resultEl)
       }
 
       list.appendChild(card)
