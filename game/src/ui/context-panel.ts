@@ -46,6 +46,8 @@ export class ContextPanel {
   onGameRuleChange: (() => void) | null = null
   /** Called when user clicks "Link Door" to enter door link mode */
   onEnterDoorLinkMode: ((entityId: string) => void) | null = null
+  /** Called when user clicks "Test Voice" on a say_voice behavior rule */
+  onTestVoice: ((npcType: string) => void) | null = null
   /** Whether patrol edit mode is active (set externally) */
   patrolEditActive = false
 
@@ -907,6 +909,19 @@ export class ContextPanel {
     }
 
     actionRow.appendChild(actionParamInput)
+
+    // Test Voice button — shown only for say_voice actions
+    const testVoiceBtn = document.createElement('button')
+    testVoiceBtn.className = 'editor-btn-icon-only test-voice-btn'
+    testVoiceBtn.textContent = '\u25B6'
+    testVoiceBtn.title = 'Test voice line'
+    testVoiceBtn.style.display = actionType === 'say_voice' ? '' : 'none'
+    testVoiceBtn.addEventListener('click', () => {
+      const npcType = actionParamInput.value.trim() || 'villager'
+      if (this.onTestVoice) this.onTestVoice(npcType)
+    })
+    actionRow.appendChild(testVoiceBtn)
+
     ruleEl.appendChild(actionRow)
 
     // Update action string on change
@@ -914,6 +929,7 @@ export class ContextPanel {
       const type = actionSelect.value
       const showParam = type !== ''
       actionParamInput.style.display = showParam ? '' : 'none'
+      testVoiceBtn.style.display = type === 'say_voice' ? '' : 'none'
 
       // Set sensible defaults when switching action type
       if (type === 'move_towards' && !/player|hero/.test(actionParamInput.value)) actionParamInput.value = 'player 80'

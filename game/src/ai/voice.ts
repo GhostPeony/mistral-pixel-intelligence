@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { SettingsPanel } from '../ui/settings-panel'
 
 export class VoiceService {
   private recognition: any = null
@@ -54,9 +55,13 @@ export class VoiceService {
         const body: Record<string, string> = { text }
         if (voiceId) body.voiceId = voiceId
 
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        const elevenlabsKey = SettingsPanel.getApiKeys().elevenlabs
+        if (elevenlabsKey) headers['X-ElevenLabs-Key'] = elevenlabsKey
+
         const res = await fetch('/api/voice/tts', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify(body),
         })
 

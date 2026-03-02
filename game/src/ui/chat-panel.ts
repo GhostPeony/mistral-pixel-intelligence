@@ -138,8 +138,10 @@ export class ChatPanel {
 
   /** Lightweight markdown-to-HTML for agent responses. */
   private renderMarkdown(src: string): string {
+    // Guard: ensure src is a string (API may return null, array, or object)
+    const text = typeof src === 'string' ? src : String(src ?? '')
     // Escape HTML
-    let html = src
+    let html = text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')

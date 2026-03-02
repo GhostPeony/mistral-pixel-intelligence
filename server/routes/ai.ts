@@ -15,7 +15,7 @@ agentManager.initialize().catch(err => {
 })
 
 router.post('/api/ai/chat', async (req, res) => {
-  const apiKey = process.env.MISTRAL_API_KEY
+  const apiKey = (req.headers['x-mistral-key'] as string) || process.env.MISTRAL_API_KEY
   if (!apiKey) {
     return res.status(500).json({ error: 'MISTRAL_API_KEY not set' })
   }

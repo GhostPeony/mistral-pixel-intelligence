@@ -2,6 +2,7 @@ import { World } from '../ecs/world'
 import { ASSET_IDS } from '../assets/sprites'
 import { MISTRAL_TOOLS } from './tool-definitions'
 import { GAME_CONFIG } from '../config/game-config'
+import { SettingsPanel } from '../ui/settings-panel'
 import type {
   PositionComponent,
   SpriteComponent,
@@ -102,9 +103,13 @@ export class MistralClient {
       body.dynamicContext = this.buildDynamicContext(world)
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    const mistralKey = SettingsPanel.getApiKeys().mistral
+    if (mistralKey) headers['X-Mistral-Key'] = mistralKey
+
     const res = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
     })
 
@@ -135,9 +140,14 @@ export class MistralClient {
     )
 
     // Store the assistant's message for conversation continuity
+    // Guard: content may come back as null, array, or object from some API formats
+    const rawContent = choice.content
+    const contentStr = typeof rawContent === 'string' ? rawContent
+      : rawContent == null ? ''
+      : JSON.stringify(rawContent)
     const assistantMsg: ChatMessage = {
       role: 'assistant',
-      content: choice.content ?? '',
+      content: contentStr,
     }
     if (choice.tool_calls?.length) {
       assistantMsg.tool_calls = choice.tool_calls

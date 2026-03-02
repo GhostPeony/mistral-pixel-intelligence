@@ -158,6 +158,13 @@ export class CombatSystem {
       const chestLayer = world.getComponent(target.entityId, 'layer') as LayerComponent | undefined
       const layerId = chestLayer?.layerId ?? 'default'
 
+      // Stop hero movement during chest interaction
+      const heroPhys = world.getComponent(this.controlledEntityId, 'physics') as PhysicsComponent | undefined
+      if (heroPhys) {
+        heroPhys.velocityX = 0
+        heroPhys.velocityY = 0
+      }
+
       chest.opened = true
       chestSprite.assetId = 'deco_chest_open'
 
@@ -270,10 +277,11 @@ export class CombatSystem {
       const attackX = dir === 'right' ? pos.x + sprite.width : pos.x - range
       const attackY = pos.y
 
-      // VFX: slash arc
+      // VFX: slash arc + weapon swing
       const arcX = dir === 'right' ? pos.x + sprite.width : pos.x
       const arcY = pos.y + sprite.height / 2
       this.vfx?.addSlashArc(arcX, arcY, dir === 'right' ? 'right' : 'left', range)
+      this.vfx?.addWeaponSwing(attackerId, dir === 'right' ? 'right' : 'left')
 
       // Get attacker's layer for filtering
       const attackerLayer = (world.getComponent(attackerId, 'layer') as LayerComponent | undefined)?.layerId ?? 'default'

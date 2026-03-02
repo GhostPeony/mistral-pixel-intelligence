@@ -21,10 +21,21 @@ export class InputSystem {
 
   constructor() {
     window.addEventListener('keydown', (e) => {
+      if (this.isTyping()) return
       if (!this.keys.has(e.code)) this.justPressedKeys.add(e.code)
       this.keys.add(e.code)
     })
-    window.addEventListener('keyup', (e) => this.keys.delete(e.code))
+    window.addEventListener('keyup', (e) => {
+      this.keys.delete(e.code)
+    })
+  }
+
+  /** Returns true when focus is on a text-entry element (input, textarea, select). */
+  private isTyping(): boolean {
+    const el = document.activeElement
+    if (!el) return false
+    const tag = el.tagName
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (el as HTMLElement).isContentEditable
   }
 
   setPlayer(id: string): void { this.playerId = id }

@@ -235,12 +235,9 @@ export class Renderer {
     const health = entity.components.get('health') as HealthComponent | undefined
     if (health && health.deadTimer > 0) return
 
-    // Invulnerability flash: skip rendering every other 100ms to create blink
+    // Invulnerability flash: pulse alpha instead of full hide to avoid glitchy blipping
     if (this.vfx && this.vfx.isFlashing(entity.id)) {
-      if (Math.floor(Date.now() / 80) % 2 === 0) {
-        ctx.globalAlpha = 1
-        return
-      }
+      ctx.globalAlpha = 0.3 + 0.4 * Math.abs(Math.sin(Date.now() / 60))
     }
 
     // Draw glow under loot drops and pickupable items
@@ -306,7 +303,7 @@ export class Renderer {
     ctx.restore()
     ctx.globalAlpha = 1
 
-    // Wielded weapon overlay
+    // Wielded weapon overlay (with swing animation)
     const equip = entity.components.get('equipment') as EquipmentComponent | undefined
     const weapon = equip?.slots.weapon
     if (weapon) {
@@ -316,15 +313,31 @@ export class Renderer {
         const dir = facing?.direction ?? 'right'
         const weaponW = 14
         const weaponH = 14
+
+        // Check for active weapon swing animation
+        const swing = this.vfx?.weaponSwings.find(s => s.entityId === entity.id)
+        const swingProgress = swing ? swing.age / swing.lifetime : -1
+        // Swing arc: -45° → +90° (idle → down-swing)
+        let swingAngle = 0
+        if (swingProgress >= 0) {
+          // Ease-out swing: fast start, slow end
+          const t = 1 - Math.pow(1 - swingProgress, 2)
+          swingAngle = (-Math.PI / 4) + t * (Math.PI * 3 / 4)
+        }
+
+        const pivotX = dir === 'right'
+          ? pos.x + sprite.width - 6
+          : pos.x + 6
+        const pivotY = pos.y + sprite.height / 2 - 4
+
         ctx.save()
         ctx.imageSmoothingEnabled = false
+        ctx.translate(pivotX, pivotY)
         if (dir === 'left') {
-          ctx.translate(pos.x - weaponW + 6 + weaponW, pos.y + sprite.height / 2 - 8)
           ctx.scale(-1, 1)
-          ctx.drawImage(weaponSprite, 0, 0, weaponW, weaponH)
-        } else {
-          ctx.drawImage(weaponSprite, pos.x + sprite.width - 6, pos.y + sprite.height / 2 - 8, weaponW, weaponH)
         }
+        ctx.rotate(swingAngle)
+        ctx.drawImage(weaponSprite, 0, -weaponH / 2, weaponW, weaponH)
         ctx.restore()
       }
     }

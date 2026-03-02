@@ -1,10 +1,10 @@
 import { Router } from 'express'
 
 const router = Router()
-const ELEVENLABS_KEY = process.env.ELEVENLABS_API_KEY
 
 router.post('/api/voice/tts', async (req, res) => {
-  if (!ELEVENLABS_KEY) {
+  const apiKey = (req.headers['x-elevenlabs-key'] as string) || process.env.ELEVENLABS_API_KEY
+  if (!apiKey) {
     return res.status(503).json({ error: 'ELEVENLABS_API_KEY not configured' })
   }
 
@@ -15,7 +15,7 @@ router.post('/api/voice/tts', async (req, res) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'xi-api-key': ELEVENLABS_KEY,
+        'xi-api-key': apiKey,
       },
       body: JSON.stringify({
         text,

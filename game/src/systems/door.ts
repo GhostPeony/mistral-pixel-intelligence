@@ -9,8 +9,10 @@ export class DoorSystem {
   private layerManager: LayerManager | null = null
   private _nearbyDoors = new Map<string, string>() // doorEntityId -> travelerEntityId
   controlledEntityId: string | null = null
+  private inputSystem: InputSystem | null = null
 
   setLayerManager(lm: LayerManager): void { this.layerManager = lm }
+  setInputSystem(input: InputSystem): void { this.inputSystem = input }
 
   /** Doors the controlled entity is currently overlapping (for rendering indicators) */
   getNearbyDoors(): Map<string, string> { return this._nearbyDoors }
@@ -81,6 +83,16 @@ export class DoorSystem {
               travelerLayer.layerId = destLayerId
             } else {
               world.addComponent(traveler, { type: 'layer', layerId: destLayerId })
+            }
+
+            // Sync input mode and physics to match destination layer
+            const destGameMode = this.layerManager.getGameModeForLayer(destLayerId)
+            this.inputSystem?.setGameMode(destGameMode)
+            if (destGameMode === 'topdown') {
+              phys.gravity = false
+              phys.velocityY = 0
+            } else {
+              phys.gravity = true
             }
           }
         }

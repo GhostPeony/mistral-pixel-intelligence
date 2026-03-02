@@ -81,6 +81,13 @@ export interface PixelExplosion {
   lifetime: number // ms — pixels linger as pile then fade
 }
 
+export interface WeaponSwing {
+  entityId: string
+  direction: 'left' | 'right'
+  age: number
+  lifetime: number
+}
+
 export class VFXSystem {
   floatingTexts: FloatingText[] = []
   slashArcs: SlashArc[] = []
@@ -91,6 +98,7 @@ export class VFXSystem {
   chestPrompts: ChestPrompt[] = []
   bursts: Burst[] = []
   pixelExplosions: PixelExplosion[] = []
+  weaponSwings: WeaponSwing[] = []
   /** Entity IDs currently flashing (invulnerable) */
   flashingEntities = new Set<string>()
 
@@ -135,6 +143,12 @@ export class VFXSystem {
 
   addItemGlow(entityId: string, color: string): void {
     this.itemGlows.push({ entityId, color, age: 0 })
+  }
+
+  addWeaponSwing(entityId: string, direction: 'left' | 'right'): void {
+    // Replace any existing swing for this entity
+    this.weaponSwings = this.weaponSwings.filter(s => s.entityId !== entityId)
+    this.weaponSwings.push({ entityId, direction, age: 0, lifetime: 200 })
   }
 
   addPixelExplosion(worldX: number, worldY: number, spriteWidth: number, spriteHeight: number, pixels: string[][]): void {
@@ -257,6 +271,14 @@ export class VFXSystem {
     // Age item glows (persist until entity is removed)
     for (const glow of this.itemGlows) {
       glow.age += dt
+    }
+
+    // Age weapon swings
+    for (let i = this.weaponSwings.length - 1; i >= 0; i--) {
+      this.weaponSwings[i].age += dt
+      if (this.weaponSwings[i].age >= this.weaponSwings[i].lifetime) {
+        this.weaponSwings.splice(i, 1)
+      }
     }
 
     // Age bursts

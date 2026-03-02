@@ -77,6 +77,7 @@ healthSystem.setVFX(vfx)
 // Wire layer manager to systems
 physics.setLayerManager(world.layerManager)
 doorSystem.setLayerManager(world.layerManager)
+doorSystem.setInputSystem(input)
 
 healthSystem.setOnEntityDeath((entityId, pos, assetId) => {
   const entity = world.getEntity(entityId)
@@ -489,6 +490,7 @@ if (!_restoredOk) {
       ...new Array(14).fill(null),
     ],
   })
+  world.addComponent(player, { type: 'layer', layerId: 'default' })
 }
 
 // input.setPlayer and renderer.setFollowTarget handled by switchControlTo below
@@ -826,15 +828,6 @@ toolbar.onSettings = () => settingsPanel.toggle()
 toolbar.onChat = () => chatPanel.toggle()
 toolbar.onBestiary = () => bestiaryPanel.toggle()
 
-settingsPanel.onPhysicsChange = (gravity) => {
-  physics.setGravity(gravity)
-}
-
-settingsPanel.onPlayerChange = (walkSpeed, jumpVelocity) => {
-  input.setWalkSpeed(walkSpeed)
-  input.setJumpVelocity(jumpVelocity)
-}
-
 backpackPanel.onConfigChange = () => {
   physics.setGravity(GAME_CONFIG.physics.gravity)
   input.setWalkSpeed(GAME_CONFIG.player.walkSpeed)
@@ -909,6 +902,18 @@ interaction.onEntitySelected = (id) => {
 
 // Context panel "Open Backpack" -> open backpack panel
 contextPanel.onOpenBackpack = () => backpackPanel.open()
+
+// Context panel "Test Voice" -> play a random line from the NPC dialogue
+contextPanel.onTestVoice = (npcType) => {
+  const profile = dialogueManager.getProfile(npcType)
+  if (!profile) {
+    console.warn(`No dialogue profile for "${npcType}"`)
+    return
+  }
+  const line = dialogueManager.pickLine(npcType)
+  if (!line) return
+  voiceService.speak(line.text, profile.voiceId)
+}
 
 // Context panel patrol editing -> canvas interaction + renderer
 contextPanel.onEditPatrol = (entityId) => {
